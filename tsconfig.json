@@ -22,7 +22,7 @@
         "noImplicitAny": false,
         "typeRoots": ["node_modules/@types"]
     },
-    "include": ["api/**/*.ts", "core/**/*.ts", "dev/*.ts"],
+    "include": ["./src/**/*.ts"],
     "exclude": ["./node_modules", "**/*.test.ts"],
     "ts-node": {
         "transpileOnly": true

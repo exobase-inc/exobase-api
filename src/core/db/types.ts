@@ -7,7 +7,7 @@ export interface MongoDocument {
 }
 
 type ServiceDocumentObject = Omit<t.Service, 'instances'> & {
-  instances: Record<string, t.EnvironmentInstance>
+  instances: Record<string, t.ServiceInstance>
 }
 
 export type PlatformDocument = MongoDocument & Omit<t.Platform, 'services'> & {

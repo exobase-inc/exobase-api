@@ -47,7 +47,7 @@ async function deployService({ auth, args, services }: Props<Args, Services, t.P
   }
 
   const deployment: t.Deployment = {
-    id: model.createId('service'),
+    id: model.createId('deployment'),
     platformId,
     serviceId,
     environmentId: instance.environmentId,
