@@ -23,7 +23,7 @@ const main = async (args: Args) => {
   console.log(token)
 }
 
-main(minimist(process.argv) as Args).catch(err => {
+main(minimist(process.argv) as any as Args).catch(err => {
   console.error(err)
   process.exit(1)
 })
