@@ -11,27 +11,18 @@ import { useTokenAuthentication } from '@exobase/auth'
 
 interface Args {
   deploymentId: string
-  status: t.DeploymentStatus
-  source: string
+  logs: string
 }
 
 interface Services {
   mongo: MongoClient
 }
 
-async function updateDeploymentStatus({ args, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<void> {
+async function updateDeploymentLogs({ args, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<void> {
   const { mongo } = services
+  const { logs } = args
 
-  const ledgerItem: t.DeploymentLedgerItem = {
-    status: args.status,
-    timestamp: +new Date(),
-    source: args.source
-  }
-
-  const [err] = await mongo.appendDeploymentLedger({
-    id: args.deploymentId,
-    ...ledgerItem
-  })
+  const [err] = await mongo.appendDeploymentLogs({ id: args.deploymentId, logs })
   if (err) throw err
 
 }
@@ -46,18 +37,10 @@ export default _.compose(
   }),
   useJsonArgs<Args>(yup => ({
     deploymentId: yup.string().required(),
-    status: yup.string().oneOf([
-      'queued', 
-      'canceled', 
-      'in_progress',
-      'success', 
-      'partial_success', 
-      'failed'
-    ]).required(),
-    source: yup.string().required()
+    logs: yup.string().required()
   })),
   useService<Services>({
     mongo: makeMongo()
   }),
-  updateDeploymentStatus
+  updateDeploymentLogs
 )

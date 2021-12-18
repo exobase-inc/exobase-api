@@ -10,8 +10,9 @@ type ServiceDocumentObject = Omit<t.Service, 'instances'> & {
   instances: Record<string, t.ServiceInstance>
 }
 
-export type PlatformDocument = MongoDocument & Omit<t.Platform, 'services'> & {
+export type PlatformDocument = MongoDocument & Omit<t.Platform, 'services' | 'domains'> & {
   services: Record<string, ServiceDocumentObject>
+  domains: Record<string, t.Domain>
 }
 
 export type MembershipDocument = MongoDocument & t.Membership & {
@@ -25,6 +26,11 @@ export type DeploymentDocument = MongoDocument & t.Deployment & {
   _serviceId: ObjectId
   _environmentId: ObjectId
   _instanceId: ObjectId
+}
+
+export type DomainDeploymentDocument = MongoDocument & t.DomainDeployment & {
+  _platformId: ObjectId
+  _domainId: ObjectId
 }
 
 export type UserDocument = MongoDocument & t.User

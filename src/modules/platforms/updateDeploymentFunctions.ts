@@ -11,27 +11,18 @@ import { useTokenAuthentication } from '@exobase/auth'
 
 interface Args {
   deploymentId: string
-  status: t.DeploymentStatus
-  source: string
+  functions: t.ExobaseFunction[]
 }
 
 interface Services {
   mongo: MongoClient
 }
 
-async function updateDeploymentStatus({ args, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<void> {
+async function updateDeploymentFunctions({ args, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<void> {
   const { mongo } = services
+  const { functions } = args
 
-  const ledgerItem: t.DeploymentLedgerItem = {
-    status: args.status,
-    timestamp: +new Date(),
-    source: args.source
-  }
-
-  const [err] = await mongo.appendDeploymentLedger({
-    id: args.deploymentId,
-    ...ledgerItem
-  })
+  const [err] = await mongo.setDeploymentFunctions({ id: args.deploymentId, functions })
   if (err) throw err
 
 }
@@ -46,18 +37,15 @@ export default _.compose(
   }),
   useJsonArgs<Args>(yup => ({
     deploymentId: yup.string().required(),
-    status: yup.string().oneOf([
-      'queued', 
-      'canceled', 
-      'in_progress',
-      'success', 
-      'partial_success', 
-      'failed'
-    ]).required(),
-    source: yup.string().required()
+    functions: yup.array().of(
+      yup.object().shape({
+        module: yup.string(),
+        function: yup.string()
+      })
+    ).required()
   })),
   useService<Services>({
     mongo: makeMongo()
   }),
-  updateDeploymentStatus
+  updateDeploymentFunctions
 )

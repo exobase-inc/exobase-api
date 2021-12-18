@@ -19,7 +19,8 @@ export class Platform {
       services: listify(document.services).map(service => ({
         ...service,
         instances: listify(service.instances)
-      }))
+      })),
+      domains: listify(document.domains)
     }
   }
 }
@@ -27,6 +28,12 @@ export class Platform {
 export class Deployment {
   static fromDeploymentDocument(document: t.DeploymentDocument): t.Deployment {
     return document as t.Deployment
+  }
+}
+
+export class DomainDeployment {
+  static fromDomainDeploymentDocument(document: t.DomainDeploymentDocument): t.DomainDeployment {
+    return document as t.DomainDeployment
   }
 }
 

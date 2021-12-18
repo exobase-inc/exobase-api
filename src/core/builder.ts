@@ -9,11 +9,17 @@ const endpoint = makeApi(config.builderApiUrl)
 
 const api = {
   deployments: {
-    initNewDeployment: endpoint<{
+    deployStack: endpoint<{
       deploymentId: string
     }, void>({
       module: 'deployments',
-      function: 'initNewDeployment'
+      function: 'deployStack'
+    }),
+    deployDomain: endpoint<{
+      deploymentId: string
+    }, void>({
+      module: 'deployments',
+      function: 'deployDomain'
     })
   }
 }

@@ -14,8 +14,8 @@ import { useTokenAuthentication } from '@exobase/auth'
 
 
 interface Args {
-  serviceId: string
-  environmentId: string
+  domain: string
+  provider: t.CloudProvider
 }
 
 interface Services {
@@ -24,59 +24,65 @@ interface Services {
 }
 
 interface Response {
-  deployment: t.DeploymentView
+  deployment: t.DomainDeploymentView
 }
 
-async function deployService({ auth, args, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<Response> {
+async function addDomain({ auth, args, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<Response> {
   const { mongo, builder } = services
   const { platformId } = auth.token.extra
-  const { serviceId, environmentId } = args
 
   const [err, platform] = await mongo.findPlatformById({ id: platformId })
   if (err) throw err
 
-  const instance = platform.services
-    .find(s => s.id === serviceId).instances
-    .find(i => i.environmentId === environmentId)
-
-  if (!instance) {
+  const existingDomain = platform.domains.find(d => d.domain === args.domain)
+  if (existingDomain) {
     throw errors.badRequest({
-      details: 'Instance with given id not found',
-      key: 'exo.err.platforms.deploy-service.masha'
+      details: 'Domain already exists',
+      key: 'exo.err.platforms.add-domain.allradius'
     })
   }
 
-  const deployment: t.Deployment = {
+  const provider = platform.providers[args.provider] as t.AWSProviderConfig
+  if (!provider.accessKeyId) {
+    throw errors.badRequest({
+      details: `Provider (${args.provider}) has not been configured`,
+      key: 'exo.err.platforms.add-domain.mellowa'
+    })
+  }
+
+  const domainId = model.createId('domain')
+
+  const deployment: t.DomainDeployment = {
     id: model.createId('deployment'),
     platformId,
-    serviceId,
-    environmentId: instance.environmentId,
-    instanceId: instance.id,
+    domainId,
     logs: '',
-    gitCommitId: null,
     ledger: [{
       status: 'queued',
       timestamp: +new Date(),
       source: 'exo.api'
-    }],
-    functions: []
+    }]
+  }
+
+  const domain: t.Domain = {
+    id: domainId,
+    platformId,
+    domain: args.domain,
+    provider: args.provider,
+    latestDeploymentId: deployment.id,
+    deployments: [deployment]
   }
 
   // TODO: Handle errors like a boss
-  await mongo.addDeployment(deployment)
-  await mongo.updateInstanceLatestDeploymentId({
-    platformId,
-    serviceId,
-    instanceId: instance.id,
-    latestDeploymentId: deployment.id
-  })
+  await mongo.addDomainDeployment(deployment)
+  await mongo.addDomainToPlatform(domain)
 
-  await builder.deployments.deployStack({
+  await builder.deployments.deployDomain({
     deploymentId: deployment.id
   })
 
   return {
-    deployment: mappers.DeploymentView.fromDeployment(deployment)
+    deployment: mappers.DomainDeploymentView.fromDomainDeployment(deployment)
   }
 }
 
@@ -89,12 +95,12 @@ export default _.compose(
     tokenSignatureSecret: config.tokenSignatureSecret
   }),
   useJsonArgs<Args>(yup => ({
-    serviceId: yup.string().required(),
-    environmentId: yup.string().required()
+    domain: yup.string().required(),
+    provider: yup.string().oneOf(['aws', 'gcp']).required()
   })),
   useService<Services>({
     mongo: makeMongo(),
     builder: makeBuilder()
   }),
-  deployService
+  addDomain
 )

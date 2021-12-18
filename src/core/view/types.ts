@@ -28,10 +28,19 @@ export type DeploymentView = {
   status: t.DeploymentStatus
   ledger: t.DeploymentLedgerItem[]
   logs: string
-  functionMap: {
-    module: string
-    function: string
-  }[]
+  functions: t.ExobaseFunction[]
+}
+
+export type DomainDeploymentView = {
+  _view: 'exo.domain-deployment'
+  id: string
+  platformId: string
+  domainId: string
+  startedAt: number
+  finishedAt: number | null
+  status: t.DeploymentStatus
+  ledger: t.DeploymentLedgerItem[]
+  logs: string
 }
 
 export type ServiceView = {
@@ -77,6 +86,15 @@ export type PlatformPreviewView = {
   name: string
 }
 
+export type DomainView = {
+  _view: 'exo.domain'
+  id: string
+  platformId: string
+  domain: string
+  provider: t.CloudProvider
+  latestDeploymentId: string | null
+}
+
 export type PlatformView = {
   _view: 'exo.platform'
   id: string
@@ -99,7 +117,8 @@ export type PlatformView = {
     heroku: t.HerokuProviderConfig & {
       configured: boolean
     }
-  }
+  },
+  domains: DomainView[]
 }
 
 export type ElevatedPlatformView = {
@@ -108,12 +127,20 @@ export type ElevatedPlatformView = {
   name: string
   environments: EnvironmentView[]
   services: ServiceView[]
+  domains: DomainView[]
   providers: {
     aws?: t.AWSProviderConfig
     gcp?: t.GCPProviderConfig
     vercel?: t.VercelProviderConfig
     heroku?: t.HerokuProviderConfig
   }
+}
+
+export type DomainDeploymentContextView = {
+  _view: 'exo.domain-deployment.context'
+  platform: Omit<ElevatedPlatformView, 'services'>
+  domain: DomainView
+  deployment: DomainDeploymentView
 }
 
 export type DeploymentContextView = {

@@ -23,6 +23,19 @@ export class PlatformPreviewView {
   }
 }
 
+export class DomainView {
+  static fromDomain(domain: t.Domain): t.DomainView {
+    return {
+      _view: 'exo.domain',
+      id: domain.id,
+      platformId: domain.platformId,
+      domain: domain.domain,
+      provider: domain.provider,
+      latestDeploymentId: domain.latestDeploymentId
+    }
+  }
+}
+
 export class PlatformView {
   static fromPlatform(platform: t.Platform): t.PlatformView {
     return {
@@ -49,7 +62,8 @@ export class PlatformView {
         heroku: {
           configured: false
         }
-      }
+      },
+      domains: platform.domains.map(DomainView.fromDomain)
     }
   }
 }
@@ -62,7 +76,8 @@ export class ElevatedPlatformView {
       environments: platform.environments.map(EnvironmentView.fromEnvironment),
       services: platform.services.map(ServiceView.fromService),
       name: platform.name,
-      providers: platform.providers
+      providers: platform.providers,
+      domains: platform.domains.map(DomainView.fromDomain)
     }
   }
 }
@@ -137,7 +152,35 @@ export class DeploymentView {
       })?.status,
       ledger: deployment.ledger,
       logs: deployment.logs,
-      functionMap: deployment.functionMap
+      functions: deployment.functions
+    }
+  }
+}
+
+export class DomainDeploymentView {
+  static fromDomainDeployment(deployment: t.DomainDeployment): t.DomainDeploymentView {
+    return {
+      _view: 'exo.domain-deployment',
+      id: deployment.id,
+      platformId: deployment.platformId,
+      domainId: deployment.domainId,
+      startedAt: deployment.ledger.find(l => l.status === 'queued')?.timestamp ?? null,
+      finishedAt: (() => {
+        const finishingStatusLedgerEntries = deployment.ledger.filter(l => {
+          const finishingStatusList: t.DeploymentStatus[] = [
+            'canceled', 'failed', 'success', 'partial_success'
+          ]
+          return finishingStatusList.includes(l.status)
+        }).map(l => l.timestamp)
+        return (finishingStatusLedgerEntries.length ?? 0) > 0
+          ? _.max(finishingStatusLedgerEntries)
+          : null
+      })(),
+      status: deployment.ledger.reduce((a, b) => {
+        return a.timestamp > b.timestamp ? a : b
+      })?.status,
+      ledger: deployment.ledger,
+      logs: deployment.logs
     }
   }
 }
@@ -165,7 +208,28 @@ export class DeploymentContextView {
       }),
       instance: ServiceInstanceView.fromEnvironmentInstance(instance),
       environment: EnvironmentView.fromEnvironment(environment),
-      deployment: DeploymentView.fromDeployment(deployment),
+      deployment: DeploymentView.fromDeployment(deployment)
+    }
+  }
+}
+
+export class DomainDeploymentContextView {
+  static fromModels({
+    platform,
+    deployment
+  }: {
+    platform: t.Platform
+    deployment: t.DomainDeployment
+  }): t.DomainDeploymentContextView {
+    const domain = platform.domains.find(d => d.id === deployment.domainId)
+    return {
+      _view: 'exo.domain-deployment.context',
+      platform: _.shake({
+        ...ElevatedPlatformView.fromPlatform(platform),
+        services: undefined
+      }),
+      domain: DomainView.fromDomain(domain),
+      deployment: DomainDeploymentView.fromDomainDeployment(deployment)
     }
   }
 }
@@ -178,5 +242,7 @@ export default {
   EnvironmentView,
   ServiceView,
   DeploymentView,
-  DeploymentContextView
+  DomainDeploymentView,
+  DeploymentContextView,
+  DomainDeploymentContextView
 }

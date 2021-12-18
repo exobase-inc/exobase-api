@@ -70,7 +70,16 @@ export type GCPProviderConfig = {
 }
 
 export type HerokuProviderConfig = {
-  
+
+}
+
+export interface Domain {
+  id: string
+  platformId: string
+  domain: string
+  provider: CloudProvider
+  latestDeploymentId: string | null
+  deployments: DomainDeployment[]
 }
 
 export interface Platform {
@@ -84,10 +93,7 @@ export interface Platform {
     gcp?: GCPProviderConfig
     vercel?: VercelProviderConfig
   }
-  // domains: {
-  //   provider: CloudProvider
-  //   domain: string
-  // }[]
+  domains: Domain[]
 }
 
 export interface Environment {
@@ -143,6 +149,19 @@ export interface DeploymentLedgerItem {
   source: string
 }
 
+export interface ExobaseFunction {
+  module: string
+  function: string
+}
+
+export interface DomainDeployment {
+  id: string
+  platformId: string
+  domainId: string
+  logs: string
+  ledger: DeploymentLedgerItem[]
+}
+
 export interface Deployment {
   id: string
   platformId: string
@@ -152,8 +171,5 @@ export interface Deployment {
   logs: string
   gitCommitId: string | null
   ledger: DeploymentLedgerItem[]
-  functionMap: {
-    module: string
-    function: string
-  }[]
+  functions: ExobaseFunction[]
 }
