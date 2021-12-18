@@ -72,7 +72,8 @@ async function loginOrCreateUser({ services, auth }: Props<Args, Services, Magic
       environments: [environment],
       membership: [membership],
       services: [],
-      providers: {}
+      providers: {},
+      domains: []
     }
 
     const [uerr] = await mongo.addUser(user)
