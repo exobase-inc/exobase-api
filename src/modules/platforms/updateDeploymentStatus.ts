@@ -13,6 +13,7 @@ interface Args {
   deploymentId: string
   status: t.DeploymentStatus
   source: string
+  logs?: string
 }
 
 interface Services {
@@ -34,6 +35,10 @@ async function updateDeploymentStatus({ args, services }: Props<Args, Services, 
   })
   if (err) throw err
 
+  if (args.logs) {
+    await mongo.appendDeploymentLogs({ id: args.deploymentId, logs: args.logs })
+  }
+
 }
 
 export default _.compose(
@@ -54,7 +59,8 @@ export default _.compose(
       'partial_success', 
       'failed'
     ]).required(),
-    source: yup.string().required()
+    source: yup.string().required(),
+    logs: yup.string()
   })),
   useService<Services>({
     mongo: makeMongo()

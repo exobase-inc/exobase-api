@@ -40,7 +40,8 @@ export type ExobaseService = 'api'
   | 'app'
   | 'webhook-server'
 
-export type ServiceKey = `${ExobaseService}:${CloudProvider}:${CloudService}:${Language}`
+export type StackKey = `${ExobaseService}:${CloudProvider}:${CloudService}:${Language}`
+export type ExobaseServiceKey = `${ExobaseService}:${CloudProvider}:${CloudService}`
 
 export type MembershipAccessLevl = 'owner'
   | 'developer'
@@ -83,6 +84,10 @@ export interface Platform {
     gcp?: GCPProviderConfig
     vercel?: VercelProviderConfig
   }
+  // domains: {
+  //   provider: CloudProvider
+  //   domain: string
+  // }[]
 }
 
 export interface Environment {
@@ -103,8 +108,13 @@ export interface Service {
     repository: string
     branch: string
   }
-  key: ServiceKey
+  key: StackKey
   instances: ServiceInstance[]
+  // domain: {
+  //   id: string
+  //   template: string
+  //   domain: string
+  // }
 }
 
 export interface ServiceInstance {
@@ -113,10 +123,11 @@ export interface ServiceInstance {
   serviceId: string
   mute: boolean
   config: {
-    type: `${CloudProvider}:${CloudService}`
+    type: ExobaseServiceKey
   } & Record<string, any>
   deployments: Deployment[]
   attributes: Record<string, string | number>
+  latestDeploymentId: string | null
 }
 
 export type DeploymentStatus = 'queued'
@@ -137,7 +148,12 @@ export interface Deployment {
   platformId: string
   serviceId: string
   environmentId: string
+  instanceId: string
   logs: string
   gitCommitId: string | null
   ledger: DeploymentLedgerItem[]
+  functionMap: {
+    module: string
+    function: string
+  }[]
 }

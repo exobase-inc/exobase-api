@@ -17,6 +17,7 @@ interface Args {
   provider: t.CloudProvider
   service: t.CloudService
   language: t.Language
+  config: any
   source: {
     repository: string
     branch: string
@@ -38,7 +39,7 @@ async function createService({ auth, args, services }: Props<Args, Services, t.P
   const [err, platform] = await mongo.findPlatformById({ id: platformId })
   if (err) throw err
 
-  const key = `${args.type}:${args.provider}:${args.service}:${args.language}` as t.ServiceKey
+  const key = `${args.type}:${args.provider}:${args.service}:${args.language}` as t.StackKey
   const serviceId = model.createId('service')
   const service: t.Service = {
     id: serviceId,
@@ -56,11 +57,10 @@ async function createService({ auth, args, services }: Props<Args, Services, t.P
         environmentId: e.id,
         serviceId, 
         mute: false,
-        config: {
-          type: `${args.provider}:${args.service}`
-        },
+        config: args.config,
         deployments: [],
-        attributes: {}
+        attributes: {},
+        latestDeploymentId: null
       }
       return inst
     })
@@ -87,6 +87,7 @@ export default _.compose(
     provider: yup.string().required(),
     service: yup.string().required(),
     language: yup.string().required(),
+    config: yup.mixed().required(),
     source: yup.object({
       repository: yup.string().required(),
       branch: yup.string().required()

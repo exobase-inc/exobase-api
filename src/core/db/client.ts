@@ -186,6 +186,23 @@ const createMongoClient = (client: Mongo.MongoClient) => {
         }
       })
     }),
+    updateInstanceLatestDeploymentId: updateOne<t.PlatformDocument, {
+      platformId: string
+      serviceId: string
+      instanceId: string
+      latestDeploymentId: string
+    }>({
+      getDb,
+      collection: 'platforms',
+      toQuery: ({ platformId }) => ({
+        _id: new ObjectId(removeIdPrefix(platformId))
+      }),
+      toUpdate: ({ serviceId, instanceId, latestDeploymentId }) => ({
+        $set: {
+          [`services.${removeIdPrefix(serviceId)}.instances.${removeIdPrefix(instanceId)}.latestDeploymentId`]: latestDeploymentId
+        }
+      })
+    }),
     addServiceToPlatform: updateOne<t.PlatformDocument, {
       service: t.Service
     }>({
@@ -196,7 +213,10 @@ const createMongoClient = (client: Mongo.MongoClient) => {
       }),
       toUpdate: ({ service }) => ({
         $set: {
-          [`services.${removeIdPrefix(service.id)}`]: service
+          [`services.${removeIdPrefix(service.id)}`]: {
+            ...service,
+            instances: objectifyListById(service.instances ?? [])
+          }
         }
       })
     }),
@@ -260,7 +280,8 @@ const createMongoClient = (client: Mongo.MongoClient) => {
         _id: new ObjectId(removeIdPrefix(deployment.id)),
         _platformId: new ObjectId(removeIdPrefix(deployment.platformId)),
         _serviceId: new ObjectId(removeIdPrefix(deployment.serviceId)),
-        _environmentId: new ObjectId(removeIdPrefix(deployment.environmentId))
+        _environmentId: new ObjectId(removeIdPrefix(deployment.environmentId)),
+        _instanceId: new ObjectId(removeIdPrefix(deployment.instanceId))
       })
     }),
     findDeploymentById: findItem({
@@ -268,6 +289,16 @@ const createMongoClient = (client: Mongo.MongoClient) => {
       collection: 'deployments',
       toQuery: ({ id }: { id: string }) => ({
         _id: new ObjectId(removeIdPrefix(id))
+      }),
+      toModel: mappers.Deployment.fromDeploymentDocument
+    }),
+    batchFindDeployments: findManyItems({
+      getDb,
+      collection: 'deployments',
+      toQuery: (args: { deploymentIds: string[] }) => ({
+        _id: {
+          $in: args.deploymentIds.map(id => new ObjectId(removeIdPrefix(id)))
+        }
       }),
       toModel: mappers.Deployment.fromDeploymentDocument
     }),
@@ -289,6 +320,19 @@ const createMongoClient = (client: Mongo.MongoClient) => {
           }
         }
       })
+    }),
+    appendDeploymentLogs: updateOne<t.DeploymentDocument, {
+      id: string
+      logs: string
+    }>({
+      getDb,
+      collection: 'deployments',
+      toQuery: ({ id }) => ({
+        _id: new ObjectId(removeIdPrefix(id))
+      }),
+      toUpdate: ({ logs }) => ([{
+        $set: { logs: { $concat: [ "$logs", logs ] } } 
+      }])
     }),
 
 

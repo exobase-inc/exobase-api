@@ -22,11 +22,16 @@ export type DeploymentView = {
   platformId: string
   environmentId: string
   serviceId: string
+  instanceId: string
   startedAt: number
-  finishedAt: number
+  finishedAt: number | null
   status: t.DeploymentStatus
   ledger: t.DeploymentLedgerItem[]
   logs: string
+  functionMap: {
+    module: string
+    function: string
+  }[]
 }
 
 export type ServiceView = {
@@ -42,7 +47,7 @@ export type ServiceView = {
     repository: string
     branch: string
   }
-  key: t.ServiceKey
+  key: t.StackKey
   instances: ServiceInstanceView[]
 }
 
@@ -53,10 +58,11 @@ export type ServiceInstanceView = {
   serviceId: string
   mute: boolean
   config: {
-    type: `${t.CloudProvider}:${t.CloudService}`
+    type: t.ExobaseServiceKey
   } & Record<string, any>
   deployments: DeploymentView[]
   attributes: Record<string, string | number>
+  latestDeploymentId: string | null
 }
 
 export type EnvironmentView = {

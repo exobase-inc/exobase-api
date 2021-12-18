@@ -15,7 +15,7 @@ import { useTokenAuthentication } from '@exobase/auth'
 
 interface Args {
   serviceId: string
-  instanceId: string
+  environmentId: string
 }
 
 interface Services {
@@ -30,14 +30,14 @@ interface Response {
 async function deployService({ auth, args, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<Response> {
   const { mongo, builder } = services
   const { platformId } = auth.token.extra
-  const { serviceId, instanceId } = args
+  const { serviceId, environmentId } = args
 
   const [err, platform] = await mongo.findPlatformById({ id: platformId })
   if (err) throw err
 
   const instance = platform.services
     .find(s => s.id === serviceId).instances
-    .find(i => i.id === instanceId)
+    .find(i => i.environmentId === environmentId)
 
   if (!instance) {
     throw errors.badRequest({
@@ -51,6 +51,7 @@ async function deployService({ auth, args, services }: Props<Args, Services, t.P
     platformId,
     serviceId,
     environmentId: instance.environmentId,
+    instanceId: instance.id,
     logs: '',
     gitCommitId: null,
     ledger: [{
@@ -60,7 +61,14 @@ async function deployService({ auth, args, services }: Props<Args, Services, t.P
     }]
   }
 
+  // TODO: Handle errors like a boss
   await mongo.addDeployment(deployment)
+  await mongo.updateInstanceLatestDeploymentId({
+    platformId,
+    serviceId,
+    instanceId: instance.id,
+    latestDeploymentId: deployment.id
+  })
 
   await builder.deployments.initNewDeployment({
     deploymentId: deployment.id
@@ -81,7 +89,7 @@ export default _.compose(
   }),
   useJsonArgs<Args>(yup => ({
     serviceId: yup.string().required(),
-    instanceId: yup.string().required()
+    environmentId: yup.string().required()
   })),
   useService<Services>({
     mongo: makeMongo(),

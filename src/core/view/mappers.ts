@@ -105,7 +105,8 @@ export class ServiceInstanceView {
       mute: instance.mute,
       config: instance.config,
       deployments: (instance.deployments ?? []).map(DeploymentView.fromDeployment),
-      attributes: instance.attributes
+      attributes: instance.attributes,
+      latestDeploymentId: instance.latestDeploymentId ?? null
     }
   }
 }
@@ -118,6 +119,7 @@ export class DeploymentView {
       platformId: deployment.platformId,
       environmentId: deployment.environmentId,
       serviceId: deployment.serviceId,
+      instanceId: deployment.instanceId,
       startedAt: deployment.ledger.find(l => l.status === 'queued')?.timestamp ?? null,
       finishedAt: (() => {
         const finishingStatusLedgerEntries = deployment.ledger.filter(l => {
@@ -134,7 +136,8 @@ export class DeploymentView {
         return a.timestamp > b.timestamp ? a : b
       })?.status,
       ledger: deployment.ledger,
-      logs: deployment.logs
+      logs: deployment.logs,
+      functionMap: deployment.functionMap
     }
   }
 }

@@ -24,6 +24,7 @@ export type DeploymentDocument = MongoDocument & t.Deployment & {
   _platformId: ObjectId
   _serviceId: ObjectId
   _environmentId: ObjectId
+  _instanceId: ObjectId
 }
 
 export type UserDocument = MongoDocument & t.User
