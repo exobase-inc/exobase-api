@@ -42,7 +42,6 @@ export class PlatformView {
       _view: 'exo.platform',
       id: platform.id,
       name: platform.name,
-      environments: platform.environments.map(EnvironmentView.fromEnvironment),
       services: (platform.services ?? []).map(ServiceView.fromService),
       providers: {
         aws: {
@@ -63,7 +62,8 @@ export class PlatformView {
           configured: false
         }
       },
-      domains: platform.domains.map(DomainView.fromDomain)
+      domains: platform.domains.map(DomainView.fromDomain),
+      hasConnectedGithubApp: !!platform._githubInstallationId
     }
   }
 }
@@ -71,23 +71,9 @@ export class PlatformView {
 export class ElevatedPlatformView {
   static fromPlatform(platform: t.Platform): t.ElevatedPlatformView {
     return {
+      ...PlatformView.fromPlatform(platform),
       _view: 'exo.platform.elevated',
-      id: platform.id,
-      environments: platform.environments.map(EnvironmentView.fromEnvironment),
-      services: platform.services.map(ServiceView.fromService),
-      name: platform.name,
-      providers: platform.providers,
-      domains: platform.domains.map(DomainView.fromDomain)
-    }
-  }
-}
-
-export class EnvironmentView {
-  static fromEnvironment(project: t.Environment): t.EnvironmentView {
-    return {
-      _view: 'exo.environment',
-      id: project.id,
-      name: project.name
+      providers: platform.providers
     }
   }
 }
@@ -105,23 +91,12 @@ export class ServiceView {
       service: service.service,
       language: service.language,
       key: service.key,
-      instances: service.instances.map(ServiceInstanceView.fromEnvironmentInstance)
-    }
-  }
-}
-
-export class ServiceInstanceView {
-  static fromEnvironmentInstance(instance: t.ServiceInstance): t.ServiceInstanceView {
-    return {
-      _view: 'exo.service-instance',
-      id: instance.id,
-      environmentId: instance.environmentId,
-      serviceId: instance.serviceId,
-      mute: instance.mute,
-      config: instance.config,
-      deployments: (instance.deployments ?? []).map(DeploymentView.fromDeployment),
-      attributes: instance.attributes,
-      latestDeploymentId: instance.latestDeploymentId ?? null
+      deployments: (service.deployments ?? []).map(DeploymentView.fromDeployment),
+      latestDeploymentId: service.latestDeploymentId ?? null,
+      tags: service.tags,
+      latestDeployment: service.latestDeployment 
+        ? DeploymentView.fromDeployment(service.latestDeployment) 
+        : null
     }
   }
 }
@@ -132,9 +107,7 @@ export class DeploymentView {
       _view: 'exo.deployment',
       id: deployment.id,
       platformId: deployment.platformId,
-      environmentId: deployment.environmentId,
       serviceId: deployment.serviceId,
-      instanceId: deployment.instanceId,
       startedAt: deployment.ledger.find(l => l.status === 'queued')?.timestamp ?? null,
       finishedAt: (() => {
         const finishingStatusLedgerEntries = deployment.ledger.filter(l => {
@@ -152,7 +125,9 @@ export class DeploymentView {
       })?.status,
       ledger: deployment.ledger,
       logs: deployment.logs,
-      functions: deployment.functions
+      functions: deployment.functions,
+      attributes: deployment.attributes,
+      config: deployment.config
     }
   }
 }
@@ -194,20 +169,13 @@ export class DeploymentContextView {
     deployment: t.Deployment
   }): t.DeploymentContextView {
     const service = platform.services.find(s => s.id === deployment.serviceId)
-    const environment = platform.environments.find(e => e.id === deployment.environmentId)
-    const instance = service.instances.find(i => i.environmentId === deployment.environmentId)
     return {
       _view: 'exo.deployment.context',
       platform: _.shake({
         ...ElevatedPlatformView.fromPlatform(platform),
         services: undefined
       }),
-      service: _.shake({
-        ...ServiceView.fromService(service),
-        instances: undefined
-      }),
-      instance: ServiceInstanceView.fromEnvironmentInstance(instance),
-      environment: EnvironmentView.fromEnvironment(environment),
+      service: ServiceView.fromService(service),
       deployment: DeploymentView.fromDeployment(deployment)
     }
   }
@@ -239,7 +207,6 @@ export default {
   PlatformPreviewView,
   PlatformView,
   ElevatedPlatformView,
-  EnvironmentView,
   ServiceView,
   DeploymentView,
   DomainDeploymentView,

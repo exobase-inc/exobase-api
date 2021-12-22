@@ -10,26 +10,19 @@ import { useTokenAuthentication } from '@exobase/auth'
 
 
 interface Args {
-  serviceId: string
-  platformId: string
-  instanceId: string
-  attributes: Record<string, string | number>
+  deploymentId: string
+  attributes: Record<string, string | number | boolean>
 }
 
 interface Services {
   mongo: MongoClient
 }
 
-async function updateServiceInstanceAttributes({ args, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<void> {
+async function updateDeploymentAttributes({ args, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<void> {
   const { mongo } = services
-  const { platformId, serviceId, instanceId, attributes } = args
+  const { attributes } = args
 
-  const [err] = await mongo.updateServiceInstanceAttributes({
-    platformId,
-    serviceId,
-    instanceId,
-    attributes
-  })
+  const [err] = await mongo.setDeploymentAttributes({ id: args.deploymentId, attributes })
   if (err) throw err
 
 }
@@ -39,17 +32,15 @@ export default _.compose(
   useTokenAuthentication({
     type: 'access',
     iss: 'exo.api',
-    scope: 'instance::update::attributes',
+    scope: 'deployment::update',
     tokenSignatureSecret: config.tokenSignatureSecret
   }),
   useJsonArgs<Args>(yup => ({
-    platformId: yup.string().required(),
-    serviceId: yup.string().required(),
-    instanceId: yup.string().required(),
-    attributes: yup.mixed().default({})
+    deploymentId: yup.string().required(),
+    attributes: yup.mixed().required()
   })),
   useService<Services>({
     mongo: makeMongo()
   }),
-  updateServiceInstanceAttributes
+  updateDeploymentAttributes
 )

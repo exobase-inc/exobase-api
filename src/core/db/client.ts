@@ -1,10 +1,9 @@
 import _ from 'radash'
-import Mongo, { ObjectId } from 'mongodb'
+import * as Mongo from 'mongodb'
+import { ObjectId } from 'mongodb'
 import * as t from '../types'
 import * as mappers from './mappers'
 
-
-type ErrorFirstPromise<T> = Promise<[null, T] | [Error, null]>
 
 const removeIdPrefix = (str: string) => {
   return str.replace(/exo\..+?\./, '')
@@ -14,6 +13,7 @@ type Collection = 'platforms'
   | 'membership'
   | 'users'
   | 'deployments'
+  | 'repository_lookup'
 
 const objectifyListById = <T extends { id: string }>(array: T[]): Record<string, T> => {
   return array.reduce((acc, t) => ({
@@ -30,7 +30,7 @@ const addItem = <TDocument extends t.MongoDocument, TModel>({
   getDb: () => Promise<Mongo.Db>,
   collection: Collection,
   toDocument: (model: TModel) => TDocument
-}) => async (model: TModel): ErrorFirstPromise<TModel> => {
+}) => async (model: TModel): Promise<[Error, TModel]> => {
   const record: TDocument = toDocument(model)
   const db = await getDb()
   const [err] = await _.try(() => {
@@ -50,7 +50,7 @@ const findItem = <TModel, TArgs, TDocument>({
   collection: Collection,
   toQuery: (args: TArgs) => Mongo.Filter<TDocument>,
   toModel: (record: TDocument) => TModel
-}) => async (args: TArgs): ErrorFirstPromise<TModel> => {
+}) => async (args: TArgs): Promise<[Error, TModel]> => {
   const db = await getDb()
   const query = toQuery(args)
   const [err, record] = await _.try(() => {
@@ -70,7 +70,7 @@ const findManyItems = <TModel, TArgs, TDocument>({
   collection: Collection,
   toQuery: (args: TArgs) => any,
   toModel: (record: TDocument) => TModel
-}) => async (args: TArgs): ErrorFirstPromise<TModel[]> => {
+}) => async (args: TArgs): Promise<[Error, TModel[]]> => {
   const db = await getDb()
   const cursor = db.collection<TDocument>(collection).find(toQuery(args))
   const [err2, records] = await _.try(() => cursor.toArray() as Promise<TDocument[]>)()
@@ -88,7 +88,7 @@ const updateOne = <TDocument extends t.MongoDocument, TPatch>({
   collection: Collection,
   toQuery: (patch: TPatch) => Mongo.Filter<TDocument>
   toUpdate: (patch: TPatch) => Partial<TDocument> | Mongo.UpdateFilter<TDocument>
-}) => async (patch: TPatch): ErrorFirstPromise<void> => {
+}) => async (patch: TPatch): Promise<[Error, void]> => {
   const db = await getDb()
   const [err] = await _.try(() => {
     return db.collection<TDocument>(collection).updateOne(toQuery(patch), toUpdate(patch), {})
@@ -129,10 +129,7 @@ const createMongoClient = (client: Mongo.MongoClient) => {
       toDocument: (platform: t.Platform): t.PlatformDocument => ({
         ...platform,
         _id: new ObjectId(removeIdPrefix(platform.id)),
-        services: objectifyListById(platform.services.map(s => ({
-          ...s,
-          instances: objectifyListById(s.instances)
-        }))),
+        services: objectifyListById(platform.services),
         domains: {}
       })
     }),
@@ -170,37 +167,18 @@ const createMongoClient = (client: Mongo.MongoClient) => {
         }
       })
     }),
-    updateServiceInstanceAttributes: updateOne<t.PlatformDocument, {
-      platformId: string
-      serviceId: string
-      instanceId: string
-      attributes: Record<string, string | number>
+    updatePlatformInstallationId: updateOne<t.PlatformDocument, {
+      id: string
+      installationId: string
     }>({
       getDb,
       collection: 'platforms',
-      toQuery: ({ platformId }) => ({
-        _id: new ObjectId(removeIdPrefix(platformId))
+      toQuery: ({ id }) => ({
+        _id: new ObjectId(removeIdPrefix(id))
       }),
-      toUpdate: ({ serviceId, instanceId, attributes }) => ({
+      toUpdate: ({ installationId }) => ({
         $set: {
-          [`services.${removeIdPrefix(serviceId)}.instances.${removeIdPrefix(instanceId)}.attributes`]: attributes
-        }
-      })
-    }),
-    updateInstanceLatestDeploymentId: updateOne<t.PlatformDocument, {
-      platformId: string
-      serviceId: string
-      instanceId: string
-      latestDeploymentId: string
-    }>({
-      getDb,
-      collection: 'platforms',
-      toQuery: ({ platformId }) => ({
-        _id: new ObjectId(removeIdPrefix(platformId))
-      }),
-      toUpdate: ({ serviceId, instanceId, latestDeploymentId }) => ({
-        $set: {
-          [`services.${removeIdPrefix(serviceId)}.instances.${removeIdPrefix(instanceId)}.latestDeploymentId`]: latestDeploymentId
+          _githubInstallationId: installationId
         }
       })
     }),
@@ -214,10 +192,7 @@ const createMongoClient = (client: Mongo.MongoClient) => {
       }),
       toUpdate: ({ service }) => ({
         $set: {
-          [`services.${removeIdPrefix(service.id)}`]: {
-            ...service,
-            instances: objectifyListById(service.instances ?? [])
-          }
+          [`services.${removeIdPrefix(service.id)}`]: service
         }
       })
     }),
@@ -230,6 +205,18 @@ const createMongoClient = (client: Mongo.MongoClient) => {
       toUpdate: (domain) => ({
         $set: {
           [`domains.${removeIdPrefix(domain.id)}`]: domain
+        }
+      })
+    }),
+    updateServiceLatestDeploymentId: updateOne<t.PlatformDocument, t.Deployment>({
+      getDb,
+      collection: 'platforms',
+      toQuery: (deployment) => ({
+        _id: new ObjectId(removeIdPrefix(deployment.platformId))
+      }),
+      toUpdate: (deployment) => ({
+        $set: {
+          [`services.${removeIdPrefix(deployment.serviceId)}.latestDeploymentId`]: deployment.id
         }
       })
     }),
@@ -292,9 +279,7 @@ const createMongoClient = (client: Mongo.MongoClient) => {
         ...deployment,
         _id: new ObjectId(removeIdPrefix(deployment.id)),
         _platformId: new ObjectId(removeIdPrefix(deployment.platformId)),
-        _serviceId: new ObjectId(removeIdPrefix(deployment.serviceId)),
-        _environmentId: new ObjectId(removeIdPrefix(deployment.environmentId)),
-        _instanceId: new ObjectId(removeIdPrefix(deployment.instanceId))
+        _serviceId: new ObjectId(removeIdPrefix(deployment.serviceId))
       })
     }),
     addDomainDeployment: addItem({
@@ -390,6 +375,21 @@ const createMongoClient = (client: Mongo.MongoClient) => {
         }
       })
     }),
+    setDeploymentAttributes: updateOne<t.DeploymentDocument, {
+      id: string
+      attributes: Record<string, string | number | boolean>
+    }>({
+      getDb,
+      collection: 'deployments',
+      toQuery: ({ id }) => ({
+        _id: new ObjectId(removeIdPrefix(id))
+      }),
+      toUpdate: ({ attributes }) => ({
+        $set: {
+          attributes
+        }
+      })
+    }),
 
 
     //
@@ -403,7 +403,6 @@ const createMongoClient = (client: Mongo.MongoClient) => {
         _id: new ObjectId(removeIdPrefix(membership.id)),
         _userId: new ObjectId(removeIdPrefix(membership.userId)),
         _platformId: new ObjectId(removeIdPrefix(membership.platformId)),
-        _environmentId: new ObjectId(removeIdPrefix(membership.environmentId))
       })
     }),
     lookupUserMembership: findManyItems({
@@ -413,7 +412,30 @@ const createMongoClient = (client: Mongo.MongoClient) => {
         _userId: new ObjectId(removeIdPrefix(args.userId))
       }),
       toModel: mappers.Membership.fromMembershipDocument
-    })
+    }),
+
+  
+    //
+    //  REPOSITORY / SERVICE LOOKUP
+    //
+    addRepositoryLookupItem: addItem({
+      getDb,
+      collection: 'repository_lookup',
+      toDocument: (item: t.RepositoryServiceLookupItem): t.RepositoryServiceLookupItemDocument => ({
+        ...item,
+        _id: new ObjectId(removeIdPrefix(item.id)),
+        _serviceId: new ObjectId(removeIdPrefix(item.serviceId)),
+        _platformId: new ObjectId(removeIdPrefix(item.platformId)),
+      })
+    }),
+    lookupRepositoryServiceItems: findManyItems({
+      getDb,
+      collection: 'repository_lookup',
+      toQuery: (args: { repositoryId: string }) => ({
+        repositoryId: new ObjectId(removeIdPrefix(args.repositoryId))
+      }),
+      toModel: mappers.RepositoryServiceLookupItem.fromDocument
+    }),
   }
 }
 

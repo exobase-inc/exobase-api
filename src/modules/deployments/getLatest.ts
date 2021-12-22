@@ -10,9 +10,7 @@ import { useVercel } from '@exobase/vercel'
 import { useTokenAuthentication } from '@exobase/auth'
 
 
-interface Args {
-  environmentId: string
-}
+interface Args {}
 
 interface Services {
   mongo: MongoClient
@@ -22,20 +20,14 @@ interface Response {
   deployments: t.DeploymentView[]
 }
 
-async function getLatestDeploymentsInEnvironment({ args, services, auth }: Props<Args, Services, t.PlatformTokenAuth>): Promise<Response> {
+async function getLatestDeployments({ services, auth }: Props<Args, Services, t.PlatformTokenAuth>): Promise<Response> {
   const { mongo } = services
-  const { environmentId } = args
   const { platformId } = auth.token.extra
 
   const [err, platform] = await mongo.findPlatformById({ id: platformId })
   if (err) throw err
 
-  const instances = platform.services.reduce((acc, service) => {
-    const instance = service.instances.find(i => i.environmentId === environmentId)
-    return instance ? [...acc, instance] : acc
-  }, [] as t.ServiceInstance[])
-
-  const deploymentIds = instances.map(i => i.latestDeploymentId).filter(x => !!x)
+  const deploymentIds = platform.services.map(i => i.latestDeploymentId).filter(x => !!x)
 
   if (deploymentIds.length === 0) {
     return { deployments: [] }
@@ -63,5 +55,5 @@ export default _.compose(
   useService<Services>({
     mongo: makeMongo()
   }),
-  getLatestDeploymentsInEnvironment
+  getLatestDeployments
 )

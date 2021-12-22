@@ -5,7 +5,7 @@ import makeMongo, { MongoClient } from '../../core/db'
 import model from '../../core/model'
 import config from '../../core/config'
 
-import type { Props } from '@exobase/core'
+import type { Props, ApiFunction } from '@exobase/core'
 import { useCors, useService, useJsonArgs } from '@exobase/hooks'
 import { useVercel } from '@exobase/vercel'
 import { useTokenAuthentication } from '@exobase/auth'
@@ -19,7 +19,9 @@ interface Args {
   language: t.Language
   config: any
   source: {
-    repository: string
+    repoId: string
+    owner: string
+    repo: string
     branch: string
   }
 }
@@ -36,34 +38,23 @@ async function createService({ auth, args, services }: Props<Args, Services, t.P
   const { mongo } = services
   const { platformId } = auth.token.extra
 
-  const [err, platform] = await mongo.findPlatformById({ id: platformId })
-  if (err) throw err
-
-  const key = `${args.type}:${args.provider}:${args.service}:${args.language}` as t.StackKey
-  const serviceId = model.createId('service')
   const service: t.Service = {
-    id: serviceId,
-    key,
-    platformId,
+    id: model.createId('service'),
     name: args.name,
-    type: args.type,
+    platformId,
     provider: args.provider,
-    language: args.language,
-    source: args.source,
     service: args.service,
-    instances: platform.environments.map(e => {
-      const inst: t.ServiceInstance = {
-        id: model.createId('instance'),
-        environmentId: e.id,
-        serviceId, 
-        mute: false,
-        config: args.config,
-        deployments: [],
-        attributes: {},
-        latestDeploymentId: null
-      }
-      return inst
-    })
+    type: args.type,
+    language: args.language,
+    key: `${args.type}:${args.provider}:${args.service}:${args.language}`,
+    source: args.source,
+    tags: [],
+    deployments: [],
+    latestDeploymentId: null,
+    latestDeployment: null,
+    config: {
+      type: `${args.type}:${args.provider}:${args.service}`
+    }
   }
 
   await mongo.addServiceToPlatform({ service })
@@ -71,6 +62,14 @@ async function createService({ auth, args, services }: Props<Args, Services, t.P
   return {
     service: mappers.ServiceView.fromService(service)
   }
+}
+
+export type RootHook = (func: ApiFunction<any, any>) => (...rest: any[]) => any
+export const useDynamicRoot = (
+  roots: Record<string, RootHook>,
+  getRootKey: () => string = () => process.env.EXO_ROOT_HOOK
+) => {
+  return roots[getRootKey()]
 }
 
 export default _.compose(

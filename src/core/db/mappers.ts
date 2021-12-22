@@ -16,10 +16,7 @@ export class Platform {
   static fromPlatformDocument(document: t.PlatformDocument): t.Platform {
     return {
       ...document,
-      services: listify(document.services).map(service => ({
-        ...service,
-        instances: listify(service.instances)
-      })),
+      services: listify(document.services),
       domains: listify(document.domains)
     }
   }
@@ -40,5 +37,11 @@ export class DomainDeployment {
 export class Membership {
   static fromMembershipDocument(document: t.MembershipDocument): t.Membership {
     return document as t.Membership
+  }
+}
+
+export class RepositoryServiceLookupItem {
+  static fromDocument(document: t.RepositoryServiceLookupItemDocument): t.RepositoryServiceLookupItem {
+    return document as t.RepositoryServiceLookupItem
   }
 }

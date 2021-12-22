@@ -15,7 +15,6 @@ import { useTokenAuthentication } from '@exobase/auth'
 
 interface Args {
   serviceId: string
-  environmentId: string
 }
 
 interface Services {
@@ -30,18 +29,15 @@ interface Response {
 async function deployService({ auth, args, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<Response> {
   const { mongo, builder } = services
   const { platformId } = auth.token.extra
-  const { serviceId, environmentId } = args
+  const { serviceId } = args
 
   const [err, platform] = await mongo.findPlatformById({ id: platformId })
   if (err) throw err
 
-  const instance = platform.services
-    .find(s => s.id === serviceId).instances
-    .find(i => i.environmentId === environmentId)
-
-  if (!instance) {
+  const service = platform.services.find(s => s.id === serviceId)
+  if (!service) {
     throw errors.badRequest({
-      details: 'Instance with given id not found',
+      details: 'Service with given id not found',
       key: 'exo.err.platforms.deploy-service.masha'
     })
   }
@@ -50,8 +46,6 @@ async function deployService({ auth, args, services }: Props<Args, Services, t.P
     id: model.createId('deployment'),
     platformId,
     serviceId,
-    environmentId: instance.environmentId,
-    instanceId: instance.id,
     logs: '',
     gitCommitId: null,
     ledger: [{
@@ -59,17 +53,14 @@ async function deployService({ auth, args, services }: Props<Args, Services, t.P
       timestamp: +new Date(),
       source: 'exo.api'
     }],
+    config: service.config,
+    attributes: {},
     functions: []
   }
 
   // TODO: Handle errors like a boss
   await mongo.addDeployment(deployment)
-  await mongo.updateInstanceLatestDeploymentId({
-    platformId,
-    serviceId,
-    instanceId: instance.id,
-    latestDeploymentId: deployment.id
-  })
+  await mongo.updateServiceLatestDeploymentId(deployment)
 
   await builder.deployments.deployStack({
     deploymentId: deployment.id
@@ -89,8 +80,7 @@ export default _.compose(
     tokenSignatureSecret: config.tokenSignatureSecret
   }),
   useJsonArgs<Args>(yup => ({
-    serviceId: yup.string().required(),
-    environmentId: yup.string().required()
+    serviceId: yup.string().required()
   })),
   useService<Services>({
     mongo: makeMongo(),

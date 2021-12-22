@@ -25,7 +25,11 @@ const config = {
     mongoUsername: get('MONGO_USER_NAME'),
     mongoPassword: get('MONGO_PASSWORD'),
     mongoInstanceName: get('MONGO_INSTANCE_NAME'),
-    builderApiUrl: get('BUILDER_API_URL')
+    builderApiUrl: get('BUILDER_API_URL'),
+    githubClientSecret: get('GITHUB_CLIENT_SECRET'),
+    githubPrivateKey: get('GITHUB_PRIVATE_KEY'),
+    githubAppId: get('GITHUB_APP_ID'),
+    githubClientId: get('GITHUB_CLIENT_ID')
 }
 
 export type Config = typeof config

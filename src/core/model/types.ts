@@ -22,6 +22,11 @@ export type Language = 'typescript'
   | 'javascript'
   | 'python'
   | 'swift'
+  | 'csharp'
+  | 'ruby'
+  | 'php'
+  | 'rust'
+  | 'go'
 
 export type CloudProvider = 'aws'
   | 'gcp'
@@ -29,6 +34,7 @@ export type CloudProvider = 'aws'
   | 'azure'
   | 'netlify'
   | 'ibm'
+  | 'heroku'
 
 export type CloudService = 'lambda'
   | 'ec2'
@@ -38,7 +44,7 @@ export type CloudService = 'lambda'
 
 export type ExobaseService = 'api'
   | 'app'
-  | 'webhook-server'
+  | 'websocket-server'
 
 export type StackKey = `${ExobaseService}:${CloudProvider}:${CloudService}:${Language}`
 export type ExobaseServiceKey = `${ExobaseService}:${CloudProvider}:${CloudService}`
@@ -51,7 +57,6 @@ export interface Membership {
   id: string
   userId: string
   platformId: string
-  environmentId: string
   acl: MembershipAccessLevl
 }
 
@@ -87,19 +92,13 @@ export interface Platform {
   name: string
   services: Service[]
   membership: Membership[]
-  environments: Environment[]
   providers: {
     aws?: AWSProviderConfig
     gcp?: GCPProviderConfig
     vercel?: VercelProviderConfig
   }
   domains: Domain[]
-}
-
-export interface Environment {
-  id: string
-  name: string
-  platformId: string
+  _githubInstallationId: string | null
 }
 
 export interface Service {
@@ -110,30 +109,20 @@ export interface Service {
   service: CloudService
   type: ExobaseService
   language: Language
+  key: StackKey
   source: {
-    repository: string
+    repoId: string
+    owner: string
+    repo: string
     branch: string
   }
-  key: StackKey
-  instances: ServiceInstance[]
-  // domain: {
-  //   id: string
-  //   template: string
-  //   domain: string
-  // }
-}
-
-export interface ServiceInstance {
-  id: string
-  environmentId: string
-  serviceId: string
-  mute: boolean
+  tags: string[]
+  deployments: Deployment[]
+  latestDeploymentId: string | null
+  latestDeployment: Deployment | null
   config: {
     type: ExobaseServiceKey
   } & Record<string, any>
-  deployments: Deployment[]
-  attributes: Record<string, string | number>
-  latestDeploymentId: string | null
 }
 
 export type DeploymentStatus = 'queued'
@@ -166,10 +155,19 @@ export interface Deployment {
   id: string
   platformId: string
   serviceId: string
-  environmentId: string
-  instanceId: string
   logs: string
   gitCommitId: string | null
   ledger: DeploymentLedgerItem[]
   functions: ExobaseFunction[]
+  attributes: Record<string, string | number | boolean>
+  config: {
+    type: ExobaseServiceKey
+  } & Record<string, any>
+}
+
+export interface RepositoryServiceLookupItem {
+  id: string
+  repositoryId: string
+  serviceId: string
+  platformId: string
 }

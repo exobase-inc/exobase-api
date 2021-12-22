@@ -12,7 +12,7 @@ import { useVercel } from '@exobase/vercel'
 import { createToken } from '@exobase/auth'
 
 
-interface Args { }
+interface Args {}
 
 interface Services {
   mongo: MongoClient
@@ -22,7 +22,6 @@ interface Response {
   user: t.UserView
   platforms: t.PlatformPreviewView[]
   platformId: string
-  environmentId: string
   idToken: string
   exp: number
 }
@@ -46,7 +45,6 @@ async function loginOrCreateUser({ services, auth }: Props<Args, Services, Magic
 
   const createUserData = async (): Promise<{ user: t.User, platforms: t.Platform[] }> => {
     const platformId = model.createId('platform')
-    const environmentId = model.createId('environment')
     const userId = model.createId('user')
     const user: t.User = {
       id: userId,
@@ -54,26 +52,20 @@ async function loginOrCreateUser({ services, auth }: Props<Args, Services, Magic
       email,
       acl: 'user'
     }
-    const environment: t.Environment = {
-      id: environmentId,
-      platformId: platformId,
-      name: 'Production'
-    }
     const membership: t.Membership = {
       id: model.createId('membership'),
       userId,
       platformId,
-      environmentId,
       acl: 'owner'
     }
     const platform: t.Platform = {
       id: platformId,
       name: 'Exobase Starter',
-      environments: [environment],
       membership: [membership],
       services: [],
       providers: {},
-      domains: []
+      domains: [],
+      _githubInstallationId: null
     }
 
     const [uerr] = await mongo.addUser(user)
@@ -96,13 +88,11 @@ async function loginOrCreateUser({ services, auth }: Props<Args, Services, Magic
     : await createUserData()
 
   const firstPlatform = _.first(platforms)
-  const firstEnvironment = _.first(firstPlatform.environments)
 
   return {
     user: mappers.UserView.fromUser(user),
     platforms: platforms.map(mappers.PlatformPreviewView.fromPlatform),
     platformId: firstPlatform.id,
-    environmentId: firstEnvironment.id,
     exp: Math.floor(Date.now() + (1200 * 1000)),
     idToken: createToken({
       sub: user.id,
@@ -114,8 +104,7 @@ async function loginOrCreateUser({ services, auth }: Props<Args, Services, Magic
       provider: 'magic',
       tokenSignatureSecret: config.tokenSignatureSecret,
       extra: {
-        platformId: firstPlatform.id,
-        environmentId: firstEnvironment.id
+        platformId: firstPlatform.id
       }
     })
   }

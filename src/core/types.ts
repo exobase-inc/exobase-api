@@ -6,5 +6,4 @@ export * from './db/types'
 
 export type PlatformTokenAuth = TokenAuth<{
   platformId: string
-  environmentId: string
 }>
