@@ -54,12 +54,7 @@ export type ServiceView = {
   service: t.CloudService
   type: t.ExobaseService
   language: t.Language
-  source: {
-    repoId: string
-    owner: string
-    repo: string
-    branch: string
-  }
+  source: t.ServiceSource
   key: t.StackKey
   tags: string[]
   deployments: DeploymentView[]

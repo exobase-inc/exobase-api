@@ -5,7 +5,7 @@ import makeGithub, { GithubApiMaker } from '../../core/github'
 import config from '../../core/config'
 
 import { errors, Props } from '@exobase/core'
-import { useCors, useJsonArgs, useService } from '@exobase/hooks'
+import { useJsonArgs, useService } from '@exobase/hooks'
 import { useVercel } from '@exobase/vercel'
 import { useTokenAuthentication } from '@exobase/auth'
 
@@ -13,6 +13,7 @@ import { useTokenAuthentication } from '@exobase/auth'
 interface Args {
   platformId: string
   serviceId: string
+  deploymentId: string
 }
 
 interface Services {
@@ -39,15 +40,24 @@ async function getSourceDownloadLink({ args, services }: Props<Args, Services, t
     })
   }
 
-  const installationId = platform._githubInstallationId
-  if (!installationId) {
+  const source = service.source
+  
+  if (!source.private) {
+    return {
+      url: `https://github.com/${source.owner}/${source.repo}/archive/refs/heads/${source.branch}.zip`
+    }
+  }
+
+  const installation = platform._githubInstallations.find(gi => gi.id === source.installationId)
+
+  if (!installation) {
     throw errors.badRequest({
       details: 'The Exobase Bot github app has not been installed and connected to the current platform',
       key: 'exo.err.services.get-source-download-link.mahoney'
     })
   }
 
-  const [gerr, { link }] = await _.try(github(installationId).getRepositoryDownloadLink)({
+  const [gerr, result] = await _.try(github(installation.id).getRepositoryDownloadLink)({
     owner: service.source.owner,
     repo: service.source.repo,
     branch: service.source.branch
@@ -55,16 +65,16 @@ async function getSourceDownloadLink({ args, services }: Props<Args, Services, t
   if (gerr) throw gerr
 
   return {
-    url: link
+    url: result.link
   }
 }
 
 export default _.compose(
   useVercel(),
-  useCors(),
-  useJsonArgs(yup => ({
-    owner: yup.string().required(),
-    repo: yup.string().required()
+  useJsonArgs<Args>(yup => ({
+    platformId: yup.string().required(),
+    serviceId: yup.string().required(),
+    deploymentId: yup.string().required()
   })),
   useTokenAuthentication({
     type: 'access',

@@ -22,7 +22,7 @@ const objectifyListById = <T extends { id: string }>(array: T[]): Record<string,
   }), {} as Record<string, T>)
 }
 
-const addItem = <TDocument extends t.MongoDocument, TModel>({
+const addItem = <TDocument, TModel>({
   getDb,
   collection,
   toDocument
@@ -130,7 +130,8 @@ const createMongoClient = (client: Mongo.MongoClient) => {
         ...platform,
         _id: new ObjectId(removeIdPrefix(platform.id)),
         services: objectifyListById(platform.services),
-        domains: {}
+        domains: {},
+        _githubInstallations: objectifyListById(platform._githubInstallations)
       })
     }),
     findPlatformById: findItem({
@@ -167,7 +168,7 @@ const createMongoClient = (client: Mongo.MongoClient) => {
         }
       })
     }),
-    updatePlatformInstallationId: updateOne<t.PlatformDocument, {
+    addPlatformInstallation: updateOne<t.PlatformDocument, {
       id: string
       installationId: string
     }>({
@@ -178,7 +179,7 @@ const createMongoClient = (client: Mongo.MongoClient) => {
       }),
       toUpdate: ({ installationId }) => ({
         $set: {
-          _githubInstallationId: installationId
+          [`_githubInstallations.${installationId}`]: { id: installationId }
         }
       })
     }),
@@ -423,7 +424,6 @@ const createMongoClient = (client: Mongo.MongoClient) => {
       collection: 'repository_lookup',
       toDocument: (item: t.RepositoryServiceLookupItem): t.RepositoryServiceLookupItemDocument => ({
         ...item,
-        _id: new ObjectId(removeIdPrefix(item.id)),
         _serviceId: new ObjectId(removeIdPrefix(item.serviceId)),
         _platformId: new ObjectId(removeIdPrefix(item.platformId)),
       })

@@ -27,7 +27,7 @@ const config = {
     mongoInstanceName: get('MONGO_INSTANCE_NAME'),
     builderApiUrl: get('BUILDER_API_URL'),
     githubClientSecret: get('GITHUB_CLIENT_SECRET'),
-    githubPrivateKey: get('GITHUB_PRIVATE_KEY'),
+    githubPrivateKey: get('GITHUB_PRIVATE_KEY').replace(/\\n/g, '\n'),
     githubAppId: get('GITHUB_APP_ID'),
     githubClientId: get('GITHUB_CLIENT_ID')
 }

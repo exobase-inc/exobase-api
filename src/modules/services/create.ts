@@ -18,12 +18,7 @@ interface Args {
   service: t.CloudService
   language: t.Language
   config: any
-  source: {
-    repoId: string
-    owner: string
-    repo: string
-    branch: string
-  }
+  source: t.ServiceSource
 }
 
 interface Services {
@@ -58,6 +53,11 @@ async function createService({ auth, args, services }: Props<Args, Services, t.P
   }
 
   await mongo.addServiceToPlatform({ service })
+  await mongo.addRepositoryLookupItem({
+    repositoryId: service.source.repoId,
+    serviceId: service.id,
+    platformId: service.platformId,
+  })
 
   return {
     service: mappers.ServiceView.fromService(service)
@@ -88,8 +88,13 @@ export default _.compose(
     language: yup.string().required(),
     config: yup.mixed().required(),
     source: yup.object({
-      repository: yup.string().required(),
-      branch: yup.string().required()
+      installationId: yup.string().nullable(),
+      private: yup.boolean(),
+      repoId: yup.string().required(),
+      owner: yup.string().required(),
+      repo: yup.string().required(),
+      branch: yup.string().required(),
+      provider: yup.string().oneOf(['github', 'bitbucket', 'gitlab' ])
     }).required()
   })),
   useService<Services>({

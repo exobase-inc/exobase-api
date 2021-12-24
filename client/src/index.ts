@@ -123,6 +123,7 @@ const createApi = (url: string) => {
       listAvailableBranches: endpoint<{
         owner: string
         repo: string
+        installationId: string | null
       }, {
         branches: {
           name: string
@@ -133,9 +134,9 @@ const createApi = (url: string) => {
       }),
       listAvailableRepositories: endpoint<{}, {
         repositories: {
-          id: number
-          name: string
-          fullName: string
+          installationId: string
+          id: string
+          repo: string
           owner: string
         }[]
       }>({
@@ -151,12 +152,7 @@ const createApi = (url: string) => {
         service: t.CloudService
         language: t.Language
         config: any
-        source: {
-          repoId: string
-          owner: string
-          repo: string
-          branch: string
-        }
+        source: t.ServiceSource
       }, {
         service: t.Service
       }>({
@@ -191,6 +187,7 @@ const createApi = (url: string) => {
       getSourceDownloadLink: endpoint<{
         serviceId: string
         platformId: string
+        deploymentId: string
       }, {
         url: string
       }>({

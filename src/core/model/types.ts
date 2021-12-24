@@ -2,7 +2,7 @@
 //
 //  LEGEND
 //
-//  _ = private, should not be deliverd to client, ever, internal
+//  _ = private, should not be deliverd to client, ever. Internal
 //  $ = nosql non-normal duplication of source record, compressed
 //
 //  This convention helps us easily identify internal fields that
@@ -16,6 +16,52 @@ export interface User {
   did: string
   email: string
   acl: UserAccessControlLevel
+  // subscription: Subscription
+  // _stripeCustomerId: string
+  // teams: string[]
+}
+
+export interface Team {
+  id: string
+  name: string
+  members: {
+    user: User
+    type: 'owner' | 'admin' | 'member'
+  }[]
+  platforms: string[]
+}
+
+export type SubscriptionEvent = 'subscription.canceled'
+  | 'subscription.started'
+  | 'subscription.paused'
+  | 'payment.failed'
+  | 'payment.success'
+
+export interface Subscription {
+  id: string
+  ownerId: string
+  userId: string
+  planId: string
+  start: number
+  end: number
+  rate: 'monthly' | 'yearly'
+  type: 'individual' | 'team'
+  ledger: {
+    timestamp: number
+    event: SubscriptionEvent
+    snapshot: Omit<Subscription, 'ledger'> | null
+  }[]
+}
+
+export interface SubscriptionPlan {
+  id: string
+  name: string
+  isTeam: boolean
+  seats: number
+  rates: {
+    monthly: number
+    yearly: number
+  }
 }
 
 export type Language = 'typescript'
@@ -98,7 +144,19 @@ export interface Platform {
     vercel?: VercelProviderConfig
   }
   domains: Domain[]
-  _githubInstallationId: string | null
+  _githubInstallations: {
+    id: string
+  }[]
+}
+
+export interface ServiceSource {
+  installationId: string | null
+  private: boolean
+  repoId: string
+  owner: string
+  repo: string
+  branch: string
+  provider: 'github' | 'bitbucket' | 'gitlab'
 }
 
 export interface Service {
@@ -110,12 +168,7 @@ export interface Service {
   type: ExobaseService
   language: Language
   key: StackKey
-  source: {
-    repoId: string
-    owner: string
-    repo: string
-    branch: string
-  }
+  source: ServiceSource
   tags: string[]
   deployments: Deployment[]
   latestDeploymentId: string | null
@@ -166,7 +219,6 @@ export interface Deployment {
 }
 
 export interface RepositoryServiceLookupItem {
-  id: string
   repositoryId: string
   serviceId: string
   platformId: string

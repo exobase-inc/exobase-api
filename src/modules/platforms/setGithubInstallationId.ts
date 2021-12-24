@@ -22,7 +22,7 @@ async function setGithubInstallationId({ args, auth, services }: Props<Args, Ser
   const { platformId } = auth.token.extra
   const { installationId } = args
 
-  const [err] = await mongo.updatePlatformInstallationId({
+  const [err] = await mongo.addPlatformInstallation({
     id: platformId,
     installationId
   })

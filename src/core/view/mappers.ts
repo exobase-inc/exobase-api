@@ -63,7 +63,7 @@ export class PlatformView {
         }
       },
       domains: platform.domains.map(DomainView.fromDomain),
-      hasConnectedGithubApp: !!platform._githubInstallationId
+      hasConnectedGithubApp: platform._githubInstallations.length > 0
     }
   }
 }

@@ -4,7 +4,7 @@ import { createAppAuth } from "@octokit/auth-app"
 import { request } from "@octokit/request"
 
 
-const makeGithub = (installationId: string) => {
+const makeGithub = (installationId?: string | null) => {
 
   const auth = createAppAuth({
     appId: config.githubAppId,
@@ -64,15 +64,25 @@ const makeGithub = (installationId: string) => {
     }): Promise<{
       link: string
     }> => {
-      // See: https://docs.github.com/en/rest/reference/repos#download-a-repository-archive-zip
-      const [err, result] = await _.try(() => requestWithAuth('GET /repos/{owner}/{repo}/zipball/{ref}', {
+      console.log({
+        installationId,
         owner,
         repo,
         ref: `refs/heads/${branch}`
+      })
+      // See: https://docs.github.com/en/rest/reference/repos#download-a-repository-archive-zip
+      // and: https://github.com/octokit/request.js/issues/240#issuecomment-676604480
+      const [err, result] = await _.try(() => requestWithAuth('HEAD /repos/{owner}/{repo}/zipball/{ref}', {
+        owner,
+        repo,
+        ref: `refs/heads/${branch}`,
+        request: {
+          
+        }
       }))()
       if (err) throw err
       return {
-        link: result.headers.location
+        link: result.url
       }
     }
   }

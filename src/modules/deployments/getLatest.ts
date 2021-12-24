@@ -5,7 +5,7 @@ import config from '../../core/config'
 import mappers from '../../core/view/mappers'
 
 import type { Props } from '@exobase/core'
-import { useCors, useService, useJsonArgs } from '@exobase/hooks'
+import { useCors, useService } from '@exobase/hooks'
 import { useVercel } from '@exobase/vercel'
 import { useTokenAuthentication } from '@exobase/auth'
 
@@ -44,9 +44,6 @@ async function getLatestDeployments({ services, auth }: Props<Args, Services, t.
 export default _.compose(
   useVercel(),
   useCors(),
-  useJsonArgs<Args>(yup => ({
-    environmentId: yup.string().required()
-  })),
   useTokenAuthentication({
     type: 'id',
     iss: 'exo.api',

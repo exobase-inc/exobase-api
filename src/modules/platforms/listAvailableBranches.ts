@@ -13,6 +13,7 @@ import { useTokenAuthentication } from '@exobase/auth'
 interface Args {
   owner: string
   repo: string
+  installationId: string | null
 }
 
 interface Services {
@@ -29,17 +30,19 @@ interface Response {
 async function listAvailableBranches({ args, auth, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<Response> {
   const { mongo, github } = services
   const { platformId } = auth.token.extra
-  const { owner, repo } = args
+  const { owner, repo, installationId } = args
 
   const [err, platform] = await mongo.findPlatformById({ id: platformId })
   if (err) throw err
 
-  const installationId = platform._githubInstallationId
-  if (!installationId) {
-    throw errors.badRequest({
-      details: 'The Exobase Bot github app has not been installed and connected to the current platform',
-      key: 'exo.err.platforms.list-available-branches.mahoney'
-    })
+  if (installationId) {
+    const installation = platform._githubInstallations.find(x => x.id === installationId)
+    if (!installation) {
+      throw errors.badRequest({
+        details: 'The Exobase Bot github app has not been installed and connected to the current platform',
+        key: 'exo.err.platforms.list-available-branches.mahoney'
+      })
+    }
   }
 
   const [gerr, { branches }] = await _.try(github(installationId).listAvailableBranches)({
@@ -57,6 +60,7 @@ export default _.compose(
   useVercel(),
   useCors(),
   useJsonArgs(yup => ({
+    installationId: yup.string().nullable(),
     owner: yup.string().required(),
     repo: yup.string().required()
   })),

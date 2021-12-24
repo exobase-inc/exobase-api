@@ -17,7 +17,8 @@ export class Platform {
     return {
       ...document,
       services: listify(document.services),
-      domains: listify(document.domains)
+      domains: listify(document.domains),
+      _githubInstallations: listify(document._githubInstallations)
     }
   }
 }

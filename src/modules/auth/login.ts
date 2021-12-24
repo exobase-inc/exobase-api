@@ -65,7 +65,7 @@ async function loginOrCreateUser({ services, auth }: Props<Args, Services, Magic
       services: [],
       providers: {},
       domains: [],
-      _githubInstallationId: null
+      _githubInstallations: []
     }
 
     const [uerr] = await mongo.addUser(user)

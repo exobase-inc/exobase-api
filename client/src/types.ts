@@ -141,6 +141,16 @@ export type DomainDeployment = {
   logs: string
 }
 
+export interface ServiceSource {
+  installationId: string | null
+  private: boolean
+  repoId: string
+  owner: string
+  repo: string
+  branch: string
+  provider: 'github' | 'bitbucket' | 'gitlab'
+}
+
 export type Service = {
   _view: 'exo.service'
   id: string
@@ -150,12 +160,7 @@ export type Service = {
   service: CloudService
   type: ExobaseService
   language: Language
-  source: {
-    repoId: string
-    owner: string
-    repo: string
-    branch: string
-  }
+  source: ServiceSource
   key: StackKey
   tags: string[]
   deployments: Deployment[]

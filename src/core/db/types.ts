@@ -6,9 +6,10 @@ export interface MongoDocument {
   _id: ObjectId
 }
 
-export type PlatformDocument = MongoDocument & Omit<t.Platform, 'services' | 'domains'> & {
+export type PlatformDocument = MongoDocument & Omit<t.Platform, 'services' | 'domains' | '_githubInstallations'> & {
   services: Record<string, t.Service>
   domains: Record<string, t.Domain>
+  _githubInstallations: Record<string, { id: string }>
 }
 
 export type MembershipDocument = MongoDocument & t.Membership & {
@@ -30,7 +31,7 @@ export type RepositoryLookupDocument = MongoDocument & t.RepositoryServiceLookup
 
 export type UserDocument = MongoDocument & t.User
 
-export type RepositoryServiceLookupItemDocument = MongoDocument & t.RepositoryServiceLookupItem & {
+export type RepositoryServiceLookupItemDocument = t.RepositoryServiceLookupItem & {
   _platformId: ObjectId
   _serviceId: ObjectId
 }
