@@ -1,14 +1,4 @@
 
-//
-//  LEGEND
-//
-//  _ = private, should not be deliverd to client, ever, internal
-//  $ = nosql non-normal duplication of source record, compressed
-//
-//  This convention helps us easily identify internal fields that
-//  should never be exposed to the user -- namely in the mappers.
-//
-
 export type UserAccessControlLevel = 'user' | 'admin'
 
 export type Language = 'typescript'
@@ -166,6 +156,9 @@ export type Service = {
   deployments: Deployment[]
   latestDeploymentId: string | null
   latestDeployment: Deployment | null
+  config: {
+    type: ExobaseServiceKey
+  } & Record<string, any>
 }
 
 export type PlatformPreview = {

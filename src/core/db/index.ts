@@ -9,9 +9,10 @@ const makeMongo = () => {
   const {
     mongoUsername: username,
     mongoPassword: password,
-    mongoInstanceName: instance
+    mongoInstanceName: instance,
+    mongoSubdomain: subdomain
   } = config
-  const uri = `mongodb+srv://${username}:${password}@${instance}.5cxqq.mongodb.net/main?retryWrites=true&w=majority`
+  const uri = `mongodb+srv://${username}:${password}@${instance}.${subdomain}.mongodb.net/main?retryWrites=true&w=majority`
   const client = new Mongo(uri, { 
     // useNewUrlParser: true,
     // useUnifiedTopology: true,

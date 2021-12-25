@@ -38,7 +38,15 @@ async function deployService({ auth, args, services }: Props<Args, Services, t.P
   if (!service) {
     throw errors.badRequest({
       details: 'Service with given id not found',
-      key: 'exo.err.platforms.deploy-service.masha'
+      key: 'exo.err.services.deploy.masha'
+    })
+  }
+
+  const providerConfig = platform.providers[service.provider]
+  if (!providerConfig) {
+    throw errors.badRequest({
+      details: 'Attempting to deploy a service to a cloud provider that has not been configured',
+      key: 'exo.err.services.deploy.unconfigured'
     })
   }
 

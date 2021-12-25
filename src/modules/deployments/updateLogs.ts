@@ -37,7 +37,7 @@ export default _.compose(
   }),
   useJsonArgs<Args>(yup => ({
     deploymentId: yup.string().required(),
-    logs: yup.string().required()
+    logs: yup.string().default('')
   })),
   useService<Services>({
     mongo: makeMongo()
