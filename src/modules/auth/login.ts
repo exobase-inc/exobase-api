@@ -50,7 +50,8 @@ async function loginOrCreateUser({ services, auth }: Props<Args, Services, Magic
       id: userId,
       did,
       email,
-      acl: 'user'
+      acl: 'user',
+      username: model.username(email)
     }
     const membership: t.Membership = {
       id: model.createId('membership'),
@@ -104,7 +105,8 @@ async function loginOrCreateUser({ services, auth }: Props<Args, Services, Magic
       provider: 'magic',
       tokenSignatureSecret: config.tokenSignatureSecret,
       extra: {
-        platformId: firstPlatform.id
+        platformId: firstPlatform.id,
+        username: user.username
       }
     })
   }

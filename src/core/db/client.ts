@@ -64,15 +64,17 @@ const findManyItems = <TModel, TArgs, TDocument>({
   getDb,
   collection,
   toQuery,
+  toOptions,
   toModel
 }: {
   getDb: () => Promise<Mongo.Db>,
   collection: Collection,
   toQuery: (args: TArgs) => any,
+  toOptions?: (args: TArgs) => Mongo.FindOptions<Mongo.Document>,
   toModel: (record: TDocument) => TModel
 }) => async (args: TArgs): Promise<[Error, TModel[]]> => {
   const db = await getDb()
-  const cursor = db.collection<TDocument>(collection).find(toQuery(args))
+  const cursor = db.collection<TDocument>(collection).find(toQuery(args), toOptions?.(args))
   const [err2, records] = await _.try(() => cursor.toArray() as Promise<TDocument[]>)()
   if (err2) return [err2, null]
   return [null, records.map(toModel)]
@@ -165,6 +167,21 @@ const createMongoClient = (client: Mongo.MongoClient) => {
       toUpdate: ({ provider, config }) => ({
         $set: {
           [`providers.${provider}`]: _.shake(config)
+        }
+      })
+    }),
+    updateServiceInPlatform: updateOne<t.PlatformDocument, {
+      id: string
+      service: t.Service
+    }>({
+      getDb,
+      collection: 'platforms',
+      toQuery: ({ id }) => ({
+        _id: new ObjectId(removeIdPrefix(id))
+      }),
+      toUpdate: ({ service }) => ({
+        $set: {
+          [`services.${removeIdPrefix(service.id)}`]: service
         }
       })
     }),
@@ -293,6 +310,21 @@ const createMongoClient = (client: Mongo.MongoClient) => {
         _domainId: new ObjectId(removeIdPrefix(deployment.domainId))
       })
     }),
+    listDeploymentsForService: findManyItems({
+      getDb,
+      collection: 'deployments',
+      toOptions: () => ({
+        limit: 20,
+        sort: {
+          timestamp: -1
+        }
+      }),
+      toQuery: (args: { platformId: string, serviceId: string }) => ({
+        _platformId: new ObjectId(removeIdPrefix(args.platformId)),
+        _serviceId: new ObjectId(removeIdPrefix(args.serviceId))
+      }),
+      toModel: mappers.Deployment.fromDeploymentDocument
+    }),
     findDeploymentById: findItem({
       getDb,
       collection: 'deployments',
@@ -378,7 +410,7 @@ const createMongoClient = (client: Mongo.MongoClient) => {
     }),
     setDeploymentAttributes: updateOne<t.DeploymentDocument, {
       id: string
-      attributes: Record<string, string | number | boolean>
+      attributes: t.DeploymentAttributes
     }>({
       getDb,
       collection: 'deployments',

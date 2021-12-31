@@ -11,7 +11,7 @@ import { useTokenAuthentication } from '@exobase/auth'
 
 interface Args {
   deploymentId: string
-  attributes: Record<string, string | number | boolean>
+  attributes: t.DeploymentAttributes
 }
 
 interface Services {
@@ -37,7 +37,15 @@ export default _.compose(
   }),
   useJsonArgs<Args>(yup => ({
     deploymentId: yup.string().required(),
-    attributes: yup.mixed().required()
+    attributes: yup.object({
+      functions: yup.array().of(yup.object({
+        module: yup.string(),
+        function: yup.string()
+      })),
+      url: yup.string(),
+      version: yup.string(),
+      outputs: yup.mixed()
+    })
   })),
   useService<Services>({
     mongo: makeMongo()

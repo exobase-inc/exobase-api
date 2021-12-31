@@ -55,6 +55,14 @@
     radash "^1.1.0"
     yup "^0.32.11"
 
+"@exobase/core@^0.0.5":
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/@exobase/core/-/core-0.0.5.tgz#eb5a2f2397048847e1181f51580d098c93733923"
+  integrity sha512-Lb2uf04eXXGlHU+A8bZMY3UTCCzozpWCtUzm8v9H3m+291Z2OurpaZdgOA00n+y1YffOWIOGf0aDLNg9bNP2Mw==
+  dependencies:
+    radash "^1.1.0"
+    yup "^0.32.11"
+
 "@exobase/hooks@^0.0.7":
   version "0.0.7"
   resolved "https://registry.yarnpkg.com/@exobase/hooks/-/hooks-0.0.7.tgz#86edecc1b93649edaeb64f056cd365a905aa5998"
@@ -64,12 +72,12 @@
     radash "^1.1.0"
     yup "^0.32.11"
 
-"@exobase/local@^0.0.15":
-  version "0.0.15"
-  resolved "https://registry.yarnpkg.com/@exobase/local/-/local-0.0.15.tgz#dd1279f228911d70a38bac31efc31497a9c1572c"
-  integrity sha512-MDRFvBKa3IKOfBFHY+/Sgs+vdumcboKFxon6E7wj0QdKgCpRpY1IpP1nKz2IAjn4wn2w6Fn4Gop83LyUtcok2Q==
+"@exobase/local@^0.0.17":
+  version "0.0.17"
+  resolved "https://registry.yarnpkg.com/@exobase/local/-/local-0.0.17.tgz#c7689938587505d63eef54653bd04e0f4bb337fc"
+  integrity sha512-ISJ8yRbaTUdbwPxmKOxDmV6GpALMhjxVb+DmQ0CLiYJ8EGCAIv+N0FECyJFP0yWPZLHnD6f5oMFjuvILM0F/lg==
   dependencies:
-    "@exobase/core" "^0.0.4"
+    "@exobase/core" "^0.0.5"
     aws-lama "^0.0.1"
     aws-lambda "^1.0.7"
     body-parser "^1.19.1"
@@ -444,9 +452,9 @@ aws-lambda@^1.0.7:
     watchpack "^2.0.0-beta.10"
 
 aws-sdk@^2.814.0:
-  version "2.1047.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.1047.0.tgz#a3b1fc3280245b2b66847c558db4dd2641573f23"
-  integrity sha512-aZg6HzcwgRpXLi8HnpwBwK+NTXlWPjLSChvdeJ+/IE9912aoAKyaV+Ydo+9h6XH0cQhkvZ2u3pFINWZVbwo+TA==
+  version "2.1048.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.1048.0.tgz#02f2f35e0f51dd4510462e05c7a48fd4649d33f8"
+  integrity sha512-mVwWo+Udiuc/yEZ/DgJQGqOEtfiQjgUdtshx/t6ISe3+jW3TF9hUACwADwx2Sr/fuJyyJ3QD5JYLt5Cw35wQpA==
   dependencies:
     buffer "4.9.2"
     events "1.1.1"

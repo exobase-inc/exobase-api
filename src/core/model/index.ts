@@ -7,6 +7,11 @@ export const createId = (model: 'service' | 'platform' | 'user' | 'deployment' |
   return `exo.${model}.${rand}`
 }
 
+export const username = (email: string) => {
+  return email.replace(/@.+/, '')
+}
+
 export default {
+  username,
   createId
 }

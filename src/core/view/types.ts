@@ -14,6 +14,7 @@ export type UserView = {
   did: string
   email: string
   acl: t.UserAccessControlLevel
+  username: string
 }
 
 export type DeploymentView = {
@@ -26,11 +27,9 @@ export type DeploymentView = {
   status: t.DeploymentStatus
   ledger: t.DeploymentLedgerItem[]
   logs: string
-  functions: t.ExobaseFunction[]
-  attributes: Record<string, string | number | boolean>
-  config: {
-    type: t.ExobaseServiceKey
-  } & Record<string, any>
+  attributes: t.DeploymentAttributes
+  config: t.ServiceConfig
+  trigger: t.DeploymentTrigger
 }
 
 export type DomainDeploymentView = {
@@ -60,6 +59,8 @@ export type ServiceView = {
   deployments: DeploymentView[]
   latestDeploymentId: string | null
   latestDeployment: DeploymentView | null
+  config: t.ServiceConfig
+  domain: t.ServiceDomainConfig | null
 }
 
 export type PlatformPreviewView = {

@@ -28,7 +28,8 @@ interface Response {
 
 async function deployService({ auth, args, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<Response> {
   const { mongo, builder } = services
-  const { platformId } = auth.token.extra
+  const { sub: userId } = auth.token
+  const { platformId, username } = auth.token.extra
   const { serviceId } = args
 
   const [err, platform] = await mongo.findPlatformById({ id: platformId })
@@ -54,6 +55,7 @@ async function deployService({ auth, args, services }: Props<Args, Services, t.P
     id: model.createId('deployment'),
     platformId,
     serviceId,
+    timestamp: +new Date(),
     logs: '',
     gitCommitId: null,
     ledger: [{
@@ -62,8 +64,14 @@ async function deployService({ auth, args, services }: Props<Args, Services, t.P
       source: 'exo.api'
     }],
     config: service.config,
-    attributes: {},
-    functions: []
+    attributes: null,
+    trigger: {
+      type: 'user',
+      user: {
+        id: userId,
+        username
+      }
+    }
   }
 
   // TODO: Handle errors like a boss

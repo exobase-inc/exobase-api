@@ -8,7 +8,8 @@ export class UserView {
       id: user.id,
       did: user.did,
       email: user.email,
-      acl: user.acl
+      acl: user.acl,
+      username: user.username
     }
   }
 }
@@ -96,7 +97,9 @@ export class ServiceView {
       tags: service.tags,
       latestDeployment: service.latestDeployment 
         ? DeploymentView.fromDeployment(service.latestDeployment) 
-        : null
+        : null,
+      config: service.config,
+      domain: service.domain
     }
   }
 }
@@ -125,9 +128,9 @@ export class DeploymentView {
       })?.status,
       ledger: deployment.ledger,
       logs: deployment.logs,
-      functions: deployment.functions,
       attributes: deployment.attributes,
-      config: deployment.config
+      config: deployment.config,
+      trigger: deployment.trigger
     }
   }
 }
@@ -210,6 +213,7 @@ export default {
   ServiceView,
   DeploymentView,
   DomainDeploymentView,
+  DomainView,
   DeploymentContextView,
   DomainDeploymentContextView
 }

@@ -16,6 +16,7 @@ export interface User {
   did: string
   email: string
   acl: UserAccessControlLevel
+  username: string
   // subscription: Subscription
   // _stripeCustomerId: string
   // teams: string[]
@@ -159,6 +160,24 @@ export interface ServiceSource {
   provider: 'github' | 'bitbucket' | 'gitlab'
 }
 
+export interface EnvironmentVariable {
+  name: string
+  value: string
+  isSecret: boolean
+}
+
+export type ServiceConfig = {
+  type: ExobaseServiceKey
+  environmentVariables: EnvironmentVariable[]
+  stack: Record<string, string | boolean | number>
+}
+
+export type ServiceDomainConfig = {
+  subdomain: string
+  domain: string
+  fqd: string
+}
+
 export interface Service {
   id: string
   name: string
@@ -173,9 +192,8 @@ export interface Service {
   deployments: Deployment[]
   latestDeploymentId: string | null
   latestDeployment: Deployment | null
-  config: {
-    type: ExobaseServiceKey
-  } & Record<string, any>
+  config: ServiceConfig
+  domain: ServiceDomainConfig | null
 }
 
 export type DeploymentStatus = 'queued'
@@ -204,18 +222,33 @@ export interface DomainDeployment {
   ledger: DeploymentLedgerItem[]
 }
 
+export interface DeploymentAttributes {
+  functions: ExobaseFunction[]
+  version: string
+  url: string
+  outputs: Record<string, string | number | boolean>
+}
+
 export interface Deployment {
   id: string
   platformId: string
   serviceId: string
   logs: string
+  timestamp: number
   gitCommitId: string | null
   ledger: DeploymentLedgerItem[]
-  functions: ExobaseFunction[]
-  attributes: Record<string, string | number | boolean>
-  config: {
-    type: ExobaseServiceKey
-  } & Record<string, any>
+  attributes: DeploymentAttributes | null
+  config: ServiceConfig
+  trigger: DeploymentTrigger
+}
+
+export interface DeploymentTrigger {
+  type: 'user' | 'source'
+  user?: {
+    id: string
+    username: string
+  }
+  source?: ServiceSource
 }
 
 export interface RepositoryServiceLookupItem {

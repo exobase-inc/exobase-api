@@ -29,18 +29,19 @@ const createApi = (url: string) => {
         module: 'deployments',
         function: 'getContext'
       }),
+      listForService: endpoint<{
+        serviceId: string
+      }, {
+        deployments: t.Deployment[]
+      }>({
+        module: 'deployments',
+        function: 'listForService'
+      }),
       getLatest: endpoint<{}, {
         deployments: t.Deployment[]
       }>({
         module: 'deployments',
         function: 'getLatest'
-      }),
-      updateFunctions: endpoint<{
-        deploymentId: string
-        functions: t.ExobaseFunction[]
-      }, {}>({
-        module: 'deployments',
-        function: 'updateFunctions'
       }),
       updateLogs: endpoint<{
         deploymentId: string
@@ -59,25 +60,25 @@ const createApi = (url: string) => {
       }),
       updateAttributes: endpoint<{
         deploymentId: string
-        attributes: Record<string, string | number | boolean>
+        attributes: t.DeploymentAttributes
       }, {}>({
         module: 'deployments',
         function: 'updateAttributes'
       })
     },
-    domainDeployment: {
+    domainDeployments: {
       getContext: endpoint<{
         deploymentId: string
       }, {
         context: t.DomainDeploymentContext
       }>({
-        module: 'domain-deployment',
+        module: 'domain-deployments',
         function: 'getContext'
       }),
       getLatest: endpoint<{}, {
         deployments: t.DomainDeployment[]
       }>({
-        module: 'domain-deployment',
+        module: 'domain-deployments',
         function: 'getLatest'
       })
     },
@@ -87,6 +88,7 @@ const createApi = (url: string) => {
         provider: t.CloudProvider
       }, {
         deployment: t.DomainDeployment
+        domain: t.Domain
       }>({
         module: 'domains',
         function: 'add'
@@ -147,17 +149,38 @@ const createApi = (url: string) => {
     services: {
       create: endpoint<{
         name: string
+        tags: string[]
         type: t.ExobaseService
         provider: t.CloudProvider
         service: t.CloudService
         language: t.Language
-        config: any
+        config: t.ServiceConfig
         source: t.ServiceSource
+        domain: {
+          domain: string
+          subdomain: string
+        } | null
       }, {
         service: t.Service
       }>({
         module: 'services',
         function: 'create'
+      }),
+      update: endpoint<{
+        id: string
+        name?: string
+        tags?: string[]
+        type?: t.ExobaseService
+        provider?: t.CloudProvider
+        service?: t.CloudService
+        language?: t.Language
+        config?: t.ServiceConfig
+        source?: t.ServiceSource
+      }, {
+        service: t.Service
+      }>({
+        module: 'services',
+        function: 'update'
       }),
       deploy: endpoint<{
         serviceId: string

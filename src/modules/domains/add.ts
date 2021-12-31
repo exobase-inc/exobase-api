@@ -24,6 +24,7 @@ interface Services {
 }
 
 interface Response {
+  domain: t.DomainView
   deployment: t.DomainDeploymentView
 }
 
@@ -43,7 +44,7 @@ async function addDomain({ auth, args, services }: Props<Args, Services, t.Platf
   }
 
   const provider = platform.providers[args.provider] as t.AWSProviderConfig
-  if (!provider.accessKeyId) {
+  if (!provider?.accessKeyId) {
     throw errors.badRequest({
       details: `Provider (${args.provider}) has not been configured`,
       key: 'exo.err.platforms.add-domain.mellowa'
@@ -82,6 +83,7 @@ async function addDomain({ auth, args, services }: Props<Args, Services, t.Platf
   })
 
   return {
+    domain: mappers.DomainView.fromDomain(domain),
     deployment: mappers.DomainDeploymentView.fromDomainDeployment(deployment)
   }
 }

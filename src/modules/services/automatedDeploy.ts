@@ -47,6 +47,7 @@ async function automatedDeployService({ args, services }: Props<Args, Services>)
     platformId,
     serviceId,
     logs: '',
+    timestamp: +new Date(),
     gitCommitId: null,
     ledger: [{
       status: 'queued',
@@ -54,8 +55,11 @@ async function automatedDeployService({ args, services }: Props<Args, Services>)
       source: 'exo.api'
     }],
     config: service.config,
-    attributes: {},
-    functions: []
+    attributes: null,
+    trigger: {
+      type: 'source',
+      source: service.source
+    }
   }
 
   // TODO: Handle errors like a boss

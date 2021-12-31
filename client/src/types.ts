@@ -100,6 +100,14 @@ export type User = {
   did: string
   email: string
   acl: UserAccessControlLevel
+  username: string
+}
+
+export interface DeploymentAttributes {
+  functions: ExobaseFunction[]
+  version: string
+  url: string
+  outputs: Record<string, string | number | boolean>
 }
 
 export type Deployment = {
@@ -112,11 +120,18 @@ export type Deployment = {
   status: DeploymentStatus
   ledger: DeploymentLedgerItem[]
   logs: string
-  functions: ExobaseFunction[]
-  attributes: Record<string, string | number | boolean>
-  config: {
-    type: ExobaseServiceKey
-  } & Record<string, any>
+  attributes: DeploymentAttributes | null
+  config: ServiceConfig
+  trigger: DeploymentTrigger
+}
+
+export interface DeploymentTrigger {
+  type: 'user' | 'source'
+  user?: {
+    id: string
+    username: string
+  }
+  source?: ServiceSource
 }
 
 export type DomainDeployment = {
@@ -131,6 +146,12 @@ export type DomainDeployment = {
   logs: string
 }
 
+export type ServiceDomainConfig = {
+  subdomain: string
+  domain: string
+  fqd: string
+}
+
 export interface ServiceSource {
   installationId: string | null
   private: boolean
@@ -139,6 +160,18 @@ export interface ServiceSource {
   repo: string
   branch: string
   provider: 'github' | 'bitbucket' | 'gitlab'
+}
+
+export interface EnvironmentVariable {
+  name: string
+  value: string
+  isSecret: boolean
+}
+
+export type ServiceConfig = {
+  type: ExobaseServiceKey
+  environmentVariables: EnvironmentVariable[]
+  stack: Record<string, string | boolean | number>
 }
 
 export type Service = {
@@ -156,9 +189,8 @@ export type Service = {
   deployments: Deployment[]
   latestDeploymentId: string | null
   latestDeployment: Deployment | null
-  config: {
-    type: ExobaseServiceKey
-  } & Record<string, any>
+  config: ServiceConfig
+  domain: ServiceDomainConfig | null
 }
 
 export type PlatformPreview = {
