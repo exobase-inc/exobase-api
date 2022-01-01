@@ -110,7 +110,11 @@ export class ServiceView {
       hasDeployedInfrastructure: (() => {
         if (!latestDeployment) return false
         if (!activeDeployment) return false
-        if (activeDeployment.type === 'create') return true
+        if (activeDeployment.type === 'create') {
+          if (activeDeployment.status === 'success') return true
+          if (activeDeployment.status === 'partial_success') return true
+          return false
+        }
         return false
       })(),
       config: service.config,

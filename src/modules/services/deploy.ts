@@ -9,7 +9,7 @@ import config from '../../core/config'
 import type { Props } from '@exobase/core'
 import { errors } from '@exobase/core'
 import { useCors, useService, useJsonArgs } from '@exobase/hooks'
-import { useVercel } from '@exobase/vercel'
+import { useLambda } from '@exobase/lambda'
 import { useTokenAuthentication } from '@exobase/auth'
 
 
@@ -89,7 +89,7 @@ async function deployService({ auth, args, services }: Props<Args, Services, t.P
 }
 
 export default _.compose(
-  useVercel(),
+  useLambda(),
   useCors(),
   useTokenAuthentication({
     type: 'id',

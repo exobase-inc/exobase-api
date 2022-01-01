@@ -6,7 +6,7 @@ import mappers from '../../core/view/mappers'
 
 import type { Props } from '@exobase/core'
 import { useCors, useService } from '@exobase/hooks'
-import { useVercel } from '@exobase/vercel'
+import { useLambda } from '@exobase/lambda'
 import { useTokenAuthentication } from '@exobase/auth'
 
 
@@ -37,7 +37,7 @@ async function listPlatformsForUser({ auth, services }: Props<Args, Services, t.
 }
 
 export default _.compose(
-  useVercel(),
+  useLambda(),
   useCors(),
   useTokenAuthentication({
     type: 'id',

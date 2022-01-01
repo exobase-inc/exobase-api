@@ -5,7 +5,7 @@ import config from '../../core/config'
 
 import type { Props } from '@exobase/core'
 import { useCors, useService, useJsonArgs } from '@exobase/hooks'
-import { useVercel } from '@exobase/vercel'
+import { useLambda } from '@exobase/lambda'
 import { useTokenAuthentication } from '@exobase/auth'
 
 
@@ -32,7 +32,7 @@ async function setGithubInstallationId({ args, auth, services }: Props<Args, Ser
 }
 
 export default _.compose(
-  useVercel(),
+  useLambda(),
   useCors(),
   useTokenAuthentication({
     type: 'id',

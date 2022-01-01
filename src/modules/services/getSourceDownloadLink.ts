@@ -6,7 +6,7 @@ import config from '../../core/config'
 
 import { errors, Props } from '@exobase/core'
 import { useJsonArgs, useService } from '@exobase/hooks'
-import { useVercel } from '@exobase/vercel'
+import { useLambda } from '@exobase/lambda'
 import { useTokenAuthentication } from '@exobase/auth'
 
 
@@ -70,7 +70,7 @@ async function getSourceDownloadLink({ args, services }: Props<Args, Services, t
 }
 
 export default _.compose(
-  useVercel(),
+  useLambda(),
   useJsonArgs<Args>(yup => ({
     platformId: yup.string().required(),
     serviceId: yup.string().required(),

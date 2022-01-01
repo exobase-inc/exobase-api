@@ -6,7 +6,7 @@ import config from '../../core/config'
 
 import { Props, ApiFunction, errors } from '@exobase/core'
 import { useCors, useService, useJsonArgs } from '@exobase/hooks'
-import { useVercel } from '@exobase/vercel'
+import { useLambda } from '@exobase/lambda'
 import { useTokenAuthentication } from '@exobase/auth'
 
 
@@ -70,7 +70,7 @@ export const useDynamicRoot = (
 }
 
 export default _.compose(
-  useVercel(),
+  useLambda(),
   useCors(),
   useTokenAuthentication({
     type: 'id',

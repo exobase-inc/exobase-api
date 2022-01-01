@@ -8,7 +8,7 @@ import mappers from '../../core/view/mappers'
 
 import type { Props } from '@exobase/core'
 import { useCors, useService } from '@exobase/hooks'
-import { useVercel } from '@exobase/vercel'
+import { useLambda } from '@exobase/lambda'
 import { createToken } from '@exobase/auth'
 
 
@@ -113,7 +113,7 @@ async function loginOrCreateUser({ services, auth }: Props<Args, Services, Magic
 }
 
 export default _.compose(
-  useVercel(),
+  useLambda(),
   useCors(),
   useMagicAuthentication(config.magicSecret),
   useService<Services>({

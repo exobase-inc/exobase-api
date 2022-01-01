@@ -286,10 +286,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@exobase/api@^0.0.6":
-  version "0.0.6"
-  resolved "https://registry.yarnpkg.com/@exobase/api/-/api-0.0.6.tgz#326ce5145057998110173f1d65ae100e6f38e008"
-  integrity sha512-lIWmmcOM1SWDlvmLZb93nhCBsW45EHCWZDmrBOhkMsQWtWSelBOiDFLLwJU7pzRP9rQNOHsy+zM3Khwd1FJbew==
+"@exobase/client-builder@^0.0.1":
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/@exobase/client-builder/-/client-builder-0.0.1.tgz#d3dbbc79e7f9ab8ebf8d0ad8b8c3651886c5c3b5"
+  integrity sha512-i1yR51CU45c17fJmzAoHrdJU2acdhNWN+uhItcv4knAKpFRuHCRBhh42U73dHVzfQmDbDq50HyNOeuEQt+pViA==
   dependencies:
     axios "^0.24.0"
     radash "^1.2.0"
@@ -2170,9 +2170,9 @@ punycode@^2.1.1:
   integrity sha512-XRsRjdf+j5ml+y/6GKHPZbrF/8p2Yga0JPtdqTIY2Xe5ohJPD9saDJJLPvp9+NSBprVvevdXZybnj2cv8OEd0A==
 
 radash@^1.2.0:
-  version "1.5.1"
-  resolved "https://registry.yarnpkg.com/radash/-/radash-1.5.1.tgz#9765f0871b0333cf1404d3d94dde52e12e90b2fd"
-  integrity sha512-h42Frxn36zUhHQ2JG05xUu1fhGLRhOqFOg1O0aSp4VRk03m0Zk7BnM3mqVtEbqT7jQ4XI24gnTkriajlNnk2oA==
+  version "1.5.2"
+  resolved "https://registry.yarnpkg.com/radash/-/radash-1.5.2.tgz#35029259b22e6f420f94402b1a1dc8dec2319d97"
+  integrity sha512-3G5h7O51h3YhjjUKvVL2aaQx1LWQXxlp6CFhFEpfRaBoR4gfeLc7QV0kvfHHoOMooX2C7HBqc2CG7stPhZcs7A==
 
 react-is@^17.0.1:
   version "17.0.2"

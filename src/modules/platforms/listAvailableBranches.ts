@@ -6,7 +6,7 @@ import config from '../../core/config'
 
 import { errors, Props } from '@exobase/core'
 import { useCors, useJsonArgs, useService } from '@exobase/hooks'
-import { useVercel } from '@exobase/vercel'
+import { useLambda } from '@exobase/lambda'
 import { useTokenAuthentication } from '@exobase/auth'
 
 
@@ -57,7 +57,7 @@ async function listAvailableBranches({ args, auth, services }: Props<Args, Servi
 }
 
 export default _.compose(
-  useVercel(),
+  useLambda(),
   useCors(),
   useJsonArgs(yup => ({
     installationId: yup.string().nullable(),

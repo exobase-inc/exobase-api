@@ -1,7 +1,7 @@
-import api from '@exobase/api'
+import api from '@exobase/client-builder'
 import * as t from './types'
 
-export { ApiError, ApiResponse, Auth } from '@exobase/api'
+export { ApiError, ApiResponse, Auth } from '@exobase/client-builder'
 export * from './types'
 
 

@@ -6,7 +6,7 @@ import mappers from '../../core/view/mappers'
 
 import type { Props } from '@exobase/core'
 import { useCors, useService, useJsonArgs } from '@exobase/hooks'
-import { useVercel } from '@exobase/vercel'
+import { useLambda } from '@exobase/lambda'
 import { useTokenAuthentication } from '@exobase/auth'
 
 
@@ -39,7 +39,7 @@ async function listDeploymentsForService({ args, services, auth }: Props<Args, S
 }
 
 export default _.compose(
-  useVercel(),
+  useLambda(),
   useCors(),
   useTokenAuthentication({
     type: 'id',

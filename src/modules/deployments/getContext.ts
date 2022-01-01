@@ -6,7 +6,7 @@ import config from '../../core/config'
 
 import type { Props } from '@exobase/core'
 import { useService, useJsonArgs } from '@exobase/hooks'
-import { useVercel } from '@exobase/vercel'
+import { useLambda } from '@exobase/lambda'
 import { useTokenAuthentication } from '@exobase/auth'
 
 
@@ -41,7 +41,7 @@ async function getDeploymentContext({ args, services }: Props<Args, Services, t.
 }
 
 export default _.compose(
-  useVercel(),
+  useLambda(),
   useTokenAuthentication({
     type: 'access',
     iss: 'exo.api',

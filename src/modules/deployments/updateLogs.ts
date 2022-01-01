@@ -5,7 +5,7 @@ import config from '../../core/config'
 
 import { Props } from '@exobase/core'
 import { useJsonArgs, useService } from '@exobase/hooks'
-import { useVercel } from '@exobase/vercel'
+import { useLambda } from '@exobase/lambda'
 import { useTokenAuthentication } from '@exobase/auth'
 
 
@@ -28,7 +28,7 @@ async function updateDeploymentLogs({ args, services }: Props<Args, Services, t.
 }
 
 export default _.compose(
-  useVercel(),
+  useLambda(),
   useTokenAuthentication({
     type: 'access',
     iss: 'exo.api',
