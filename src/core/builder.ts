@@ -15,6 +15,12 @@ const api = {
       module: 'deployments',
       function: 'deployStack'
     }),
+    destroyStack: endpoint<{
+      deploymentId: string
+    }, void>({
+      module: 'deployments',
+      function: 'destroyStack'
+    }),
     deployDomain: endpoint<{
       deploymentId: string
     }, void>({

@@ -22,12 +22,14 @@ export type CloudProvider = 'aws'
 export type CloudService = 'lambda'
   | 'ec2'
   | 'ecs'
+  | 's3'
   | 'cloud-run'
   | 'cloud-function'
 
 export type ExobaseService = 'api'
   | 'app'
   | 'websocket-server'
+  | 'static-website'
 
 export type StackKey = `${ExobaseService}:${CloudProvider}:${CloudService}:${Language}`
 export type ExobaseServiceKey = `${ExobaseService}:${CloudProvider}:${CloudService}`
@@ -113,6 +115,7 @@ export interface DeploymentAttributes {
 export type Deployment = {
   _view: 'exo.deployment'
   id: string
+  type: 'create' | 'destroy'
   platformId: string
   serviceId: string
   startedAt: number
@@ -174,6 +177,12 @@ export type ServiceConfig = {
   stack: Record<string, string | boolean | number>
 }
 
+export type DeleteEvent = {
+  userId: string
+  timestamp: number
+  source: string
+}
+
 export type Service = {
   _view: 'exo.service'
   id: string
@@ -189,8 +198,15 @@ export type Service = {
   deployments: Deployment[]
   latestDeploymentId: string | null
   latestDeployment: Deployment | null
+  activeDeploymentId: string | null
+  activeDeployment: Deployment | null
   config: ServiceConfig
   domain: ServiceDomainConfig | null
+  hasDeployedInfrastructure: boolean
+  hasDeploymentInProgress: boolean
+  isDeleted: boolean
+  deleteEvent: DeleteEvent | null
+  createdAt: number
 }
 
 export type PlatformPreview = {

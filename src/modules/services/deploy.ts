@@ -53,6 +53,7 @@ async function deployService({ auth, args, services }: Props<Args, Services, t.P
 
   const deployment: t.Deployment = {
     id: model.createId('deployment'),
+    type: 'create',
     platformId,
     serviceId,
     timestamp: +new Date(),
@@ -76,7 +77,7 @@ async function deployService({ auth, args, services }: Props<Args, Services, t.P
 
   // TODO: Handle errors like a boss
   await mongo.addDeployment(deployment)
-  await mongo.updateServiceLatestDeploymentId(deployment)
+  await mongo.updateServiceLatestDeployment(deployment)
 
   await builder.deployments.deployStack({
     deploymentId: deployment.id

@@ -14,7 +14,6 @@ import { useTokenAuthentication } from '@exobase/auth'
 
 
 interface Args {
-  platformId: string
   serviceId: string
 }
 
@@ -27,9 +26,11 @@ interface Response {
   deployment: t.DeploymentView
 }
 
-async function automatedDeployService({ args, services }: Props<Args, Services>): Promise<Response> {
+async function destroyService({ auth, args, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<Response> {
   const { mongo, builder } = services
-  const { platformId, serviceId } = args
+  const { sub: userId } = auth.token
+  const { platformId, username } = auth.token.extra
+  const { serviceId } = args
 
   const [err, platform] = await mongo.findPlatformById({ id: platformId })
   if (err) throw err
@@ -38,17 +39,25 @@ async function automatedDeployService({ args, services }: Props<Args, Services>)
   if (!service) {
     throw errors.badRequest({
       details: 'Service with given id not found',
-      key: 'exo.err.services.automated-deploy.hohoho'
+      key: 'exo.err.services.destroy.masha'
+    })
+  }
+
+  const providerConfig = platform.providers[service.provider]
+  if (!providerConfig) {
+    throw errors.badRequest({
+      details: 'Attempting to destroy a service on a cloud provider that has not been configured',
+      key: 'exo.err.services.destroy.unconfigured'
     })
   }
 
   const deployment: t.Deployment = {
     id: model.createId('deployment'),
-    type: 'create',
+    type: 'destroy',
     platformId,
     serviceId,
-    logs: '',
     timestamp: +new Date(),
+    logs: '',
     gitCommitId: null,
     ledger: [{
       status: 'queued',
@@ -58,8 +67,11 @@ async function automatedDeployService({ args, services }: Props<Args, Services>)
     config: service.config,
     attributes: null,
     trigger: {
-      type: 'source',
-      source: service.source
+      type: 'user',
+      user: {
+        id: userId,
+        username
+      }
     }
   }
 
@@ -67,7 +79,7 @@ async function automatedDeployService({ args, services }: Props<Args, Services>)
   await mongo.addDeployment(deployment)
   await mongo.updateServiceLatestDeployment(deployment)
 
-  await builder.deployments.deployStack({
+  await builder.deployments.destroyStack({
     deploymentId: deployment.id
   })
 
@@ -80,18 +92,16 @@ export default _.compose(
   useVercel(),
   useCors(),
   useTokenAuthentication({
-    type: 'access',
+    type: 'id',
     iss: 'exo.api',
-    scope: 'services::deploy',
     tokenSignatureSecret: config.tokenSignatureSecret
   }),
   useJsonArgs<Args>(yup => ({
-    platformId: yup.string().required(),
     serviceId: yup.string().required()
   })),
   useService<Services>({
     mongo: makeMongo(),
     builder: makeBuilder()
   }),
-  automatedDeployService
+  destroyService
 )

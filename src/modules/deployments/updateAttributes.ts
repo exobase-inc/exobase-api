@@ -20,10 +20,25 @@ interface Services {
 
 async function updateDeploymentAttributes({ args, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<void> {
   const { mongo } = services
-  const { attributes } = args
+  const { deploymentId, attributes } = args
 
-  const [err] = await mongo.setDeploymentAttributes({ id: args.deploymentId, attributes })
+  const [err] = await mongo.setDeploymentAttributes({ id: deploymentId, attributes })
   if (err) throw err
+
+  // TODO: Don't be so fucking lazy and handle the errors
+  const [, deployment] = await mongo.findDeploymentById({ id: deploymentId })
+  const [, service] = await mongo.findService({
+    platformId: deployment.platformId,
+    serviceId: deployment.serviceId
+  })
+
+  if (service.activeDeployment?.id === deploymentId) {
+    await mongo.updateServiceActiveDeployment(deployment)
+  }
+  
+  if (service.latestDeployment?.id === deploymentId) {
+    await mongo.updateServiceLatestDeployment(deployment)
+  }
 
 }
 

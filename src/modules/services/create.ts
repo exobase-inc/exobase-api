@@ -76,10 +76,13 @@ async function createService({ auth, args, services }: Props<Args, Services, t.P
     key: `${args.type}:${args.provider}:${args.service}:${args.language}`,
     source: args.source,
     deployments: [],
-    latestDeploymentId: null,
     latestDeployment: null,
+    activeDeployment: null,
     config: args.config,
-    domain
+    domain,
+    isDeleted: false,
+    deleteEvent: null,
+    createdAt: +new Date()
   }
 
   await mongo.addServiceToPlatform({ service })

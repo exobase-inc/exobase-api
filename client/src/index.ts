@@ -37,12 +37,6 @@ const createApi = (url: string) => {
         module: 'deployments',
         function: 'listForService'
       }),
-      getLatest: endpoint<{}, {
-        deployments: t.Deployment[]
-      }>({
-        module: 'deployments',
-        function: 'getLatest'
-      }),
       updateLogs: endpoint<{
         deploymentId: string
         logs: string
@@ -189,6 +183,20 @@ const createApi = (url: string) => {
       }>({
         module: 'services',
         function: 'deploy'
+      }),
+      destroy: endpoint<{
+        serviceId: string
+      }, {
+        deployment: t.Deployment
+      }>({
+        module: 'services',
+        function: 'destroy'
+      }),
+      remove: endpoint<{
+        serviceId: string
+      }, {}>({
+        module: 'services',
+        function: 'remove'
       }),
       listByRepositoryId: endpoint<{
         repositoryId: string

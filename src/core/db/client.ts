@@ -49,7 +49,7 @@ const findItem = <TModel, TArgs, TDocument>({
   getDb: () => Promise<Mongo.Db>,
   collection: Collection,
   toQuery: (args: TArgs) => Mongo.Filter<TDocument>,
-  toModel: (record: TDocument) => TModel
+  toModel: (record: TDocument, args?: TArgs) => TModel
 }) => async (args: TArgs): Promise<[Error, TModel]> => {
   const db = await getDb()
   const query = toQuery(args)
@@ -57,7 +57,7 @@ const findItem = <TModel, TArgs, TDocument>({
     return db.collection<TDocument>(collection).findOne(query) as Promise<TDocument>
   })()
   if (err) return [err, null]
-  return [null, toModel(record)]
+  return [null, toModel(record, args)]
 }
 
 const findManyItems = <TModel, TArgs, TDocument>({
@@ -144,6 +144,16 @@ const createMongoClient = (client: Mongo.MongoClient) => {
       }),
       toModel: mappers.Platform.fromPlatformDocument
     }),
+    findService: findItem({
+      getDb,
+      collection: 'platforms',
+      toQuery: ({ platformId }: { platformId: string, serviceId: string }) => ({
+        _id: new ObjectId(removeIdPrefix(platformId))
+      }),
+      toModel: (document: t.PlatformDocument, { serviceId }) => {
+        return mappers.Platform.fromPlatformDocument(document).services.find(s => s.id === serviceId)
+      }
+    }),
     batchFindPlatforms: findManyItems({
       getDb,
       collection: 'platforms',
@@ -167,6 +177,23 @@ const createMongoClient = (client: Mongo.MongoClient) => {
       toUpdate: ({ provider, config }) => ({
         $set: {
           [`providers.${provider}`]: _.shake(config)
+        }
+      })
+    }),
+    markServiceDeleted: updateOne<t.PlatformDocument, {
+      platformId: string
+      serviceId: string,
+      deleteEvent: t.DeleteEvent
+    }>({
+      getDb,
+      collection: 'platforms',
+      toQuery: ({ platformId }) => ({
+        _id: new ObjectId(removeIdPrefix(platformId))
+      }),
+      toUpdate: ({ serviceId, deleteEvent }) => ({
+        $set: {
+          [`services.${removeIdPrefix(serviceId)}.isDeleted`]: true,
+          [`services.${removeIdPrefix(serviceId)}.deleteEvent`]: deleteEvent
         }
       })
     }),
@@ -226,7 +253,7 @@ const createMongoClient = (client: Mongo.MongoClient) => {
         }
       })
     }),
-    updateServiceLatestDeploymentId: updateOne<t.PlatformDocument, t.Deployment>({
+    updateServiceLatestDeployment: updateOne<t.PlatformDocument, t.Deployment>({
       getDb,
       collection: 'platforms',
       toQuery: (deployment) => ({
@@ -234,7 +261,19 @@ const createMongoClient = (client: Mongo.MongoClient) => {
       }),
       toUpdate: (deployment) => ({
         $set: {
-          [`services.${removeIdPrefix(deployment.serviceId)}.latestDeploymentId`]: deployment.id
+          [`services.${removeIdPrefix(deployment.serviceId)}.latestDeployment`]: deployment
+        }
+      })
+    }),
+    updateServiceActiveDeployment: updateOne<t.PlatformDocument, t.Deployment>({
+      getDb,
+      collection: 'platforms',
+      toQuery: (deployment) => ({
+        _id: new ObjectId(removeIdPrefix(deployment.platformId))
+      }),
+      toUpdate: (deployment) => ({
+        $set: {
+          [`services.${removeIdPrefix(deployment.serviceId)}.activeDeployment`]: deployment
         }
       })
     }),
@@ -363,20 +402,16 @@ const createMongoClient = (client: Mongo.MongoClient) => {
     }),
     appendDeploymentLedger: updateOne<t.DeploymentDocument, {
       id: string
-      status: t.DeploymentStatus
-      timestamp: number
-      source: string
+      item: t.DeploymentLedgerItem
     }>({
       getDb,
       collection: 'deployments',
       toQuery: ({ id }) => ({
         _id: new ObjectId(removeIdPrefix(id))
       }),
-      toUpdate: ({ status, timestamp, source }) => ({
+      toUpdate: ({ item }) => ({
         $push: {
-          ledger: {
-            status, timestamp, source
-          }
+          ledger: item
         }
       })
     }),

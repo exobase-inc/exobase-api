@@ -43,7 +43,7 @@ export class PlatformView {
       _view: 'exo.platform',
       id: platform.id,
       name: platform.name,
-      services: (platform.services ?? []).map(ServiceView.fromService),
+      services: (platform.services ?? []).filter(s => !s.isDeleted).map(ServiceView.fromService),
       providers: {
         aws: {
           accessKeyId: platform.providers.aws?.accessKeyId ? '***************' : null,
@@ -81,6 +81,14 @@ export class ElevatedPlatformView {
 
 export class ServiceView {
   static fromService(service: t.Service): t.ServiceView {
+    const latestDeployment = service.latestDeployment
+      ? DeploymentView.fromDeployment(service.latestDeployment)
+      : null
+    const activeDeployment = service.activeDeployment
+      ? DeploymentView.fromDeployment(service.activeDeployment)
+      : null
+    const inProgressStatuses: t.DeploymentStatus[] = ['in_progress', 'queued']
+    const hasDeploymentInProgress = inProgressStatuses.includes(latestDeployment?.status)
     return {
       _view: 'exo.service',
       id: service.id,
@@ -91,15 +99,25 @@ export class ServiceView {
       source: service.source,
       service: service.service,
       language: service.language,
+      tags: service.tags,
       key: service.key,
       deployments: (service.deployments ?? []).map(DeploymentView.fromDeployment),
-      latestDeploymentId: service.latestDeploymentId ?? null,
-      tags: service.tags,
-      latestDeployment: service.latestDeployment 
-        ? DeploymentView.fromDeployment(service.latestDeployment) 
-        : null,
+      latestDeploymentId: service.latestDeployment?.id ?? null,
+      activeDeploymentId: service.activeDeployment?.id ?? null,
+      latestDeployment,
+      activeDeployment,
+      hasDeploymentInProgress,
+      hasDeployedInfrastructure: (() => {
+        if (!latestDeployment) return false
+        if (!activeDeployment) return false
+        if (activeDeployment.type === 'create') return true
+        return false
+      })(),
       config: service.config,
-      domain: service.domain
+      domain: service.domain,
+      isDeleted: service.isDeleted,
+      deleteEvent: service.deleteEvent,
+      createdAt: service.createdAt
     }
   }
 }
@@ -109,6 +127,7 @@ export class DeploymentView {
     return {
       _view: 'exo.deployment',
       id: deployment.id,
+      type: deployment.type,
       platformId: deployment.platformId,
       serviceId: deployment.serviceId,
       startedAt: deployment.ledger.find(l => l.status === 'queued')?.timestamp ?? null,

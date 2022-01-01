@@ -20,6 +20,7 @@ export type UserView = {
 export type DeploymentView = {
   _view: 'exo.deployment'
   id: string
+  type: 'create' | 'destroy'
   platformId: string
   serviceId: string
   startedAt: number
@@ -59,8 +60,15 @@ export type ServiceView = {
   deployments: DeploymentView[]
   latestDeploymentId: string | null
   latestDeployment: DeploymentView | null
+  activeDeploymentId: string | null
+  activeDeployment: DeploymentView | null
   config: t.ServiceConfig
   domain: t.ServiceDomainConfig | null
+  hasDeployedInfrastructure: boolean
+  hasDeploymentInProgress: boolean
+  isDeleted: boolean
+  deleteEvent: t.DeleteEvent | null
+  createdAt: number
 }
 
 export type PlatformPreviewView = {
