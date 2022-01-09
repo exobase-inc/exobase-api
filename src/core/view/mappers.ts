@@ -100,7 +100,7 @@ export class ServiceView {
       service: service.service,
       language: service.language,
       tags: service.tags,
-      key: service.key,
+      stack: service.stack,
       deployments: (service.deployments ?? []).map(DeploymentView.fromDeployment),
       latestDeploymentId: service.latestDeployment?.id ?? null,
       activeDeploymentId: service.activeDeployment?.id ?? null,

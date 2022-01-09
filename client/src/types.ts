@@ -25,14 +25,16 @@ export type CloudService = 'lambda'
   | 's3'
   | 'cloud-run'
   | 'cloud-function'
+  | 'cloud-build'
+  | 'code-build'
 
 export type ExobaseService = 'api'
   | 'app'
   | 'websocket-server'
   | 'static-website'
+  | 'task-runner'
 
-export type StackKey = `${ExobaseService}:${CloudProvider}:${CloudService}:${Language}`
-export type ExobaseServiceKey = `${ExobaseService}:${CloudProvider}:${CloudService}`
+export type StackKey = `${ExobaseService}:${CloudProvider}:${CloudService}`
 
 export type MembershipAccessLevl = 'owner'
   | 'developer'
@@ -172,9 +174,9 @@ export interface EnvironmentVariable {
 }
 
 export type ServiceConfig = {
-  type: ExobaseServiceKey
+  type: StackKey
   environmentVariables: EnvironmentVariable[]
-  stack: Record<string, string | boolean | number>
+  stack: AnyStackConfig
 }
 
 export type DeleteEvent = {
@@ -193,7 +195,7 @@ export type Service = {
   type: ExobaseService
   language: Language
   source: ServiceSource
-  key: StackKey
+  stack: StackKey
   tags: string[]
   deployments: Deployment[]
   latestDeploymentId: string | null
@@ -272,4 +274,34 @@ export type DeploymentContext = {
   platform: Omit<ElevatedPlatform, 'services'>
   service: Service
   deployment: Deployment
+}
+
+
+export interface  StackConfig {
+  stack: StackKey
+}
+
+export type AnyStackConfig = TaskRunnerAWSCodeBuildStackConfig
+  | ApiAWSLambdaStackConfig
+  | StaticWebsiteAWSS3StackConfig
+
+export interface TaskRunnerAWSCodeBuildStackConfig extends StackConfig {
+  stack: 'task-runner:aws:code-build'
+  buildTimeoutSeconds: number
+  useBridgeApi: boolean
+  buildCommand: string
+  bridgeApiKey?: string
+}
+
+export interface ApiAWSLambdaStackConfig extends StackConfig {
+  stack: 'api:aws:lambda'
+  timeout: number
+  memory: number
+}
+
+export interface StaticWebsiteAWSS3StackConfig extends StackConfig {
+  stack: 'static-website:aws:s3'
+  distDir: string
+  preBuildCommand: string
+  buildCommand: string
 }

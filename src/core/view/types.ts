@@ -55,7 +55,7 @@ export type ServiceView = {
   type: t.ExobaseService
   language: t.Language
   source: t.ServiceSource
-  key: t.StackKey
+  stack: t.StackKey
   tags: string[]
   deployments: DeploymentView[]
   latestDeploymentId: string | null

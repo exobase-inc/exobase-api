@@ -11,15 +11,8 @@ import { useTokenAuthentication } from '@exobase/auth'
 
 
 interface Args {
-  id: string
-  name?: string
-  tags?: string[]
-  type?: t.ExobaseService
-  provider?: t.CloudProvider
-  service?: t.CloudService
-  language?: t.Language
-  config?: t.ServiceConfig
-  source?: t.ServiceSource
+  serviceId: string
+  config: t.ServiceConfig
 }
 
 interface Services {
@@ -30,10 +23,10 @@ interface Response {
   service: t.ServiceView
 }
 
-async function updateService({ auth, args, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<Response> {
+async function updateConfig({ auth, args, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<Response> {
   const { mongo } = services
   const { platformId } = auth.token.extra
-  const { id: serviceId } = args
+  const { serviceId } = args
 
   const [err, platform] = await mongo.findPlatformById({ id: platformId })
   if (err) throw err
@@ -48,7 +41,7 @@ async function updateService({ auth, args, services }: Props<Args, Services, t.P
 
   const newService: t.Service = {
     ...service,
-    ...args
+    config: args.config
   }
 
   await mongo.updateServiceInPlatform({
@@ -70,26 +63,11 @@ export default _.compose(
     tokenSignatureSecret: config.tokenSignatureSecret
   }),
   useJsonArgs<Args>(yup => ({
-    id: yup.string().required(),
-    name: yup.string(),
-    tags: yup.array().of(yup.string()),
-    type: yup.string(),
-    provider: yup.string(),
-    service: yup.string(),
-    language: yup.string(),
-    config: yup.mixed(),
-    source: yup.object({
-      installationId: yup.string().nullable(),
-      private: yup.boolean(),
-      repoId: yup.string().required(),
-      owner: yup.string().required(),
-      repo: yup.string().required(),
-      branch: yup.string().required(),
-      provider: yup.string().oneOf(['github', 'bitbucket', 'gitlab' ])
-    })
+    serviceId: yup.string().required(),
+    config: yup.mixed().required()
   })),
   useService<Services>({
     mongo: makeMongo()
   }),
-  updateService
+  updateConfig
 )

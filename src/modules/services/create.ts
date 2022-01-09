@@ -4,6 +4,7 @@ import mappers from '../../core/view/mappers'
 import makeMongo, { MongoClient } from '../../core/db'
 import model from '../../core/model'
 import config from '../../core/config'
+import { stacks, stackConfigValidator } from '../../core/stacks'
 
 import { Props, ApiFunction, errors } from '@exobase/core'
 import { useCors, useService, useJsonArgs } from '@exobase/hooks'
@@ -73,7 +74,7 @@ async function createService({ auth, args, services }: Props<Args, Services, t.P
     service: args.service,
     type: args.type,
     language: args.language,
-    key: `${args.type}:${args.provider}:${args.service}:${args.language}`,
+    stack: `${args.type}:${args.provider}:${args.service}`,
     source: args.source,
     deployments: [],
     latestDeployment: null,
@@ -82,7 +83,7 @@ async function createService({ auth, args, services }: Props<Args, Services, t.P
     domain,
     isDeleted: false,
     deleteEvent: null,
-    createdAt: +new Date()
+    createdAt: Date.now()
   }
 
   await mongo.addServiceToPlatform({ service })
@@ -120,7 +121,14 @@ export default _.compose(
     provider: yup.string().required(),
     service: yup.string().required(),
     language: yup.string().required(),
-    config: yup.mixed().required(),
+    config: yup.object({
+      type: yup.string().oneOf(stacks).required(),
+      environmentVariables: yup.array().of(yup.object({
+        name: yup.string().required(),
+        value: yup.string().required()
+      })),
+      stack: stackConfigValidator(yup)
+    }),
     domain: yup.object({ // TODO: Improve validation + .required()
       subdomain: yup.string(),
       domain: yup.string()

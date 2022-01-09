@@ -176,6 +176,15 @@ const createApi = (url: string) => {
         module: 'services',
         function: 'update'
       }),
+      updateConfig: endpoint<{
+        serviceId: string
+        config: t.ServiceConfig
+      }, {
+        service: t.Service
+      }>({
+        module: 'services',
+        function: 'updateConfig'
+      }),
       deploy: endpoint<{
         serviceId: string
       }, {
