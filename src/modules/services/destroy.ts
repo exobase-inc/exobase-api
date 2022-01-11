@@ -79,8 +79,11 @@ async function destroyService({ auth, args, services }: Props<Args, Services, t.
   await mongo.addDeployment(deployment)
   await mongo.updateServiceLatestDeployment(deployment)
 
-  await builder.deployments.destroyStack({
-    deploymentId: deployment.id
+  await builder.trigger.build({
+    args: {
+      action: 'destroy-stack',
+      deploymentId: deployment.id
+    }
   })
 
   return {

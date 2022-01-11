@@ -2,30 +2,18 @@ import _ from 'radash'
 import makeApi from '@exobase/client-builder'
 import config from './config'
 
-
-console.log(config)
-
 const endpoint = makeApi(config.builderApiUrl)
 
 const api = {
-  deployments: {
-    deployStack: endpoint<{
-      deploymentId: string
+  trigger: {
+    build: endpoint<{
+      args: {
+        action: 'deploy-domain' | 'deploy-stack' | 'destroy-stack'
+        deploymentId: string
+      }
     }, void>({
-      module: 'deployments',
-      function: 'deployStack'
-    }),
-    destroyStack: endpoint<{
-      deploymentId: string
-    }, void>({
-      module: 'deployments',
-      function: 'destroyStack'
-    }),
-    deployDomain: endpoint<{
-      deploymentId: string
-    }, void>({
-      module: 'deployments',
-      function: 'deployDomain'
+      module: 'trigger',
+      function: 'build'
     })
   }
 }

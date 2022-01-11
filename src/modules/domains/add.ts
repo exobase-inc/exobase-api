@@ -78,8 +78,11 @@ async function addDomain({ auth, args, services }: Props<Args, Services, t.Platf
   await mongo.addDomainDeployment(deployment)
   await mongo.addDomainToPlatform(domain)
 
-  await builder.deployments.deployDomain({
-    deploymentId: deployment.id
+  await builder.trigger.build({
+    args: {
+      action: 'deploy-domain',
+      deploymentId: deployment.id
+    }
   })
 
   return {

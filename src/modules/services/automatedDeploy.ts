@@ -67,8 +67,11 @@ async function automatedDeployService({ args, services }: Props<Args, Services>)
   await mongo.addDeployment(deployment)
   await mongo.updateServiceLatestDeployment(deployment)
 
-  await builder.deployments.deployStack({
-    deploymentId: deployment.id
+  await builder.trigger.build({
+    args: {
+      action: 'deploy-stack',
+      deploymentId: deployment.id
+    }
   })
 
   return {
