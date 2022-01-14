@@ -84,7 +84,7 @@ async function deployService({ auth, args, services }: Props<Args, Services, t.P
       action: 'deploy-stack',
       deploymentId: deployment.id
     }
-  })
+  }, { key: config.builderApiKey })
 
   return {
     deployment: mappers.DeploymentView.fromDeployment(deployment)

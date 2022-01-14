@@ -72,7 +72,7 @@ async function automatedDeployService({ args, services }: Props<Args, Services>)
       action: 'deploy-stack',
       deploymentId: deployment.id
     }
-  })
+  }, { key: config.builderApiKey })
 
   return {
     deployment: mappers.DeploymentView.fromDeployment(deployment)

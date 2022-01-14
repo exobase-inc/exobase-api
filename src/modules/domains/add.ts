@@ -83,7 +83,7 @@ async function addDomain({ auth, args, services }: Props<Args, Services, t.Platf
       action: 'deploy-domain',
       deploymentId: deployment.id
     }
-  })
+  }, { key: config.builderApiKey })
 
   return {
     domain: mappers.DomainView.fromDomain(domain),

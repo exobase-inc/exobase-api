@@ -84,7 +84,7 @@ async function destroyService({ auth, args, services }: Props<Args, Services, t.
       action: 'destroy-stack',
       deploymentId: deployment.id
     }
-  })
+  }, { key: config.builderApiKey })
 
   return {
     deployment: mappers.DeploymentView.fromDeployment(deployment)
