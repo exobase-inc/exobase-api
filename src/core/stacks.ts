@@ -19,6 +19,7 @@ const schemas = {
     buildTimeoutSeconds: yup.number().min(5).max(480).required(),
     useBridgeApi: yup.boolean().required(),
     buildCommand: yup.string().required(),
+    dockerImage: yup.string().required(),
     bridgeApiKey: yup.string().when('useBridgeApi', {
       is: true,
       then: yup.string().required()

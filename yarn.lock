@@ -31,13 +31,13 @@
     radash "^1.1.0"
     yup "^0.32.11"
 
-"@exobase/client-builder@^0.0.1":
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/@exobase/client-builder/-/client-builder-0.0.1.tgz#d3dbbc79e7f9ab8ebf8d0ad8b8c3651886c5c3b5"
-  integrity sha512-i1yR51CU45c17fJmzAoHrdJU2acdhNWN+uhItcv4knAKpFRuHCRBhh42U73dHVzfQmDbDq50HyNOeuEQt+pViA==
+"@exobase/client-builder@^0.0.2":
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/@exobase/client-builder/-/client-builder-0.0.2.tgz#b1014e5a1fd1841cd1a5aa407820fe4afee8a69d"
+  integrity sha512-b7ErZQtQvhf1vwg6M35jw//vLxkdr2EK7fhAE/HIrE290RuoHyKMzl4nLa+3crSnGbQUZqYaLUn9qQdgVHGSWA==
   dependencies:
     axios "^0.24.0"
-    radash "^1.2.0"
+    radash "^1.5.2"
 
 "@exobase/core@^0.0.4":
   version "0.0.4"
@@ -943,9 +943,9 @@ finalhandler@~1.1.2:
     unpipe "~1.0.0"
 
 follow-redirects@^1.14.4:
-  version "1.14.6"
-  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.14.6.tgz#8cfb281bbc035b3c067d6cd975b0f6ade6e855cd"
-  integrity sha512-fhUl5EwSJbbl8AR+uYL2KQDxLkdSjZGR36xy46AO7cOMTrCMON6Sa28FmAnC2tRTDbd/Uuzz3aJBv7EBN7JH8A==
+  version "1.14.7"
+  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.14.7.tgz#2004c02eb9436eee9a21446a6477debf17e81685"
+  integrity sha512-+hbxoLbFMbRKDwohX8GkTataGqO6Jb7jGwpAlwgy2bIz25XtRm7KEzJM76R1WiNT5SwZkX4Y75SwBolkpmE7iQ==
 
 forwarded@0.2.0:
   version "0.2.0"
@@ -1363,7 +1363,7 @@ querystring@0.2.0:
   resolved "https://registry.yarnpkg.com/querystring/-/querystring-0.2.0.tgz#b209849203bb25df820da756e747005878521620"
   integrity sha1-sgmEkgO7Jd+CDadW50cAWHhSFiA=
 
-radash@^1.1.0, radash@^1.2.0, radash@^1.3.0, radash@^1.5.2:
+radash@^1.1.0, radash@^1.3.0, radash@^1.5.2:
   version "1.5.2"
   resolved "https://registry.yarnpkg.com/radash/-/radash-1.5.2.tgz#35029259b22e6f420f94402b1a1dc8dec2319d97"
   integrity sha512-3G5h7O51h3YhjjUKvVL2aaQx1LWQXxlp6CFhFEpfRaBoR4gfeLc7QV0kvfHHoOMooX2C7HBqc2CG7stPhZcs7A==

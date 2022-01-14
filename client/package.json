@@ -1,6 +1,6 @@
 {
   "name": "@exobase/client-js",
-  "version": "0.0.41",
+  "version": "0.0.44",
   "description": "Javascript client for interacting with the Exobase platform API",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -28,6 +28,6 @@
     "typescript": "^4.4.2"
   },
   "dependencies": {
-    "@exobase/client-builder": "^0.0.1"
+    "@exobase/client-builder": "^0.0.2-alpha.2"
   }
 }

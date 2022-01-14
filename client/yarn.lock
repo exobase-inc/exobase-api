@@ -286,13 +286,13 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@exobase/client-builder@^0.0.1":
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/@exobase/client-builder/-/client-builder-0.0.1.tgz#d3dbbc79e7f9ab8ebf8d0ad8b8c3651886c5c3b5"
-  integrity sha512-i1yR51CU45c17fJmzAoHrdJU2acdhNWN+uhItcv4knAKpFRuHCRBhh42U73dHVzfQmDbDq50HyNOeuEQt+pViA==
+"@exobase/client-builder@^0.0.2-alpha.2":
+  version "0.0.2-alpha.2"
+  resolved "https://registry.yarnpkg.com/@exobase/client-builder/-/client-builder-0.0.2-alpha.2.tgz#095354f90be8d79eca7aa86a9ad37b7b137ab2cc"
+  integrity sha512-Eey8rfLMjHPn1zOvg6ElphENEEJt7hEKdKshJLTnuATm/h0EJ95Iya75hgRY6hW40aQ0Dt7SMr564UVEYdHzAg==
   dependencies:
     axios "^0.24.0"
-    radash "^1.2.0"
+    radash "^1.5.2"
 
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"
@@ -1170,9 +1170,9 @@ find-up@^4.0.0, find-up@^4.1.0:
     path-exists "^4.0.0"
 
 follow-redirects@^1.14.4:
-  version "1.14.6"
-  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.14.6.tgz#8cfb281bbc035b3c067d6cd975b0f6ade6e855cd"
-  integrity sha512-fhUl5EwSJbbl8AR+uYL2KQDxLkdSjZGR36xy46AO7cOMTrCMON6Sa28FmAnC2tRTDbd/Uuzz3aJBv7EBN7JH8A==
+  version "1.14.7"
+  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.14.7.tgz#2004c02eb9436eee9a21446a6477debf17e81685"
+  integrity sha512-+hbxoLbFMbRKDwohX8GkTataGqO6Jb7jGwpAlwgy2bIz25XtRm7KEzJM76R1WiNT5SwZkX4Y75SwBolkpmE7iQ==
 
 form-data@^3.0.0:
   version "3.0.1"
@@ -2169,7 +2169,7 @@ punycode@^2.1.1:
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-2.1.1.tgz#b58b010ac40c22c5657616c8d2c2c02c7bf479ec"
   integrity sha512-XRsRjdf+j5ml+y/6GKHPZbrF/8p2Yga0JPtdqTIY2Xe5ohJPD9saDJJLPvp9+NSBprVvevdXZybnj2cv8OEd0A==
 
-radash@^1.2.0:
+radash@^1.5.2:
   version "1.5.2"
   resolved "https://registry.yarnpkg.com/radash/-/radash-1.5.2.tgz#35029259b22e6f420f94402b1a1dc8dec2319d97"
   integrity sha512-3G5h7O51h3YhjjUKvVL2aaQx1LWQXxlp6CFhFEpfRaBoR4gfeLc7QV0kvfHHoOMooX2C7HBqc2CG7stPhZcs7A==

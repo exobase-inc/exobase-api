@@ -79,12 +79,18 @@ async function deployService({ auth, args, services }: Props<Args, Services, t.P
   await mongo.addDeployment(deployment)
   await mongo.updateServiceLatestDeployment(deployment)
 
-  await builder.trigger.build({
+  const builderResponse = await builder.trigger.build({
     args: {
       action: 'deploy-stack',
       deploymentId: deployment.id
     }
   }, { key: config.builderApiKey })
+  if (builderResponse.error) {
+    throw errors.unknown({
+      details: `Error queuing build: ${builderResponse.error.details}`,
+      key: 'exo.err.services.deploy.badbuilder'
+    })
+  }
 
   return {
     deployment: mappers.DeploymentView.fromDeployment(deployment)

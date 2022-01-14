@@ -289,6 +289,7 @@ export interface TaskRunnerAWSCodeBuildStackConfig extends StackConfig {
   stack: 'task-runner:aws:code-build'
   buildTimeoutSeconds: number
   useBridgeApi: boolean
+  dockerImage: string
   buildCommand: string
   bridgeApiKey?: string
 }

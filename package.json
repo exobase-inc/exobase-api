@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@exobase/auth": "^0.0.14",
-    "@exobase/client-builder": "^0.0.1",
+    "@exobase/client-builder": "^0.0.2",
     "@exobase/core": "^0.0.6",
     "@exobase/hooks": "^0.0.10",
     "@exobase/lambda": "^0.0.10",
