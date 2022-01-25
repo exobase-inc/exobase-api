@@ -37,12 +37,20 @@ const createApi = (url: string) => {
         module: 'deployments',
         function: 'listForService'
       }),
-      updateLogs: endpoint<{
+      appendLogChunk: endpoint<{
         deploymentId: string
-        logs: string
+        chunk: t.DeploymentLogStreamChunk
       }, {}>({
         module: 'deployments',
-        function: 'updateLogs'
+        function: 'appendLogChunk'
+      }),
+      getLogStream: endpoint<{
+        deploymentId: string
+      }, {
+        logStream: t.DeploymentLogStream
+      }>({
+        module: 'deployments',
+        function: 'getLogStream'
       }),
       updateStatus: endpoint<{
         deploymentId: string

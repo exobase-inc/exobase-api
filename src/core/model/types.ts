@@ -231,7 +231,7 @@ export interface DomainDeployment {
   id: string
   platformId: string
   domainId: string
-  logs: string
+  logStream: DeploymentLogStream
   ledger: DeploymentLedgerItem[]
 }
 
@@ -247,13 +247,22 @@ export interface Deployment {
   type: 'create' | 'destroy'
   platformId: string
   serviceId: string
-  logs: string
   timestamp: number
   gitCommitId: string | null
   ledger: DeploymentLedgerItem[]
   attributes: DeploymentAttributes | null
   config: ServiceConfig
   trigger: DeploymentTrigger
+  logStream: DeploymentLogStream
+}
+
+export interface DeploymentLogStreamChunk {
+  content: string
+  timestamp: number
+}
+
+export interface DeploymentLogStream {
+  chunks: DeploymentLogStreamChunk[]
 }
 
 export interface DeploymentTrigger {

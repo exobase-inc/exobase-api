@@ -47,7 +47,9 @@ async function automatedDeployService({ args, services }: Props<Args, Services>)
     type: 'create',
     platformId,
     serviceId,
-    logs: '',
+    logStream: {
+      chunks: []
+    },
     timestamp: +new Date(),
     gitCommitId: null,
     ledger: [{

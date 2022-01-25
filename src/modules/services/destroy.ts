@@ -57,7 +57,9 @@ async function destroyService({ auth, args, services }: Props<Args, Services, t.
     platformId,
     serviceId,
     timestamp: +new Date(),
-    logs: '',
+    logStream: {
+      chunks: []
+    },
     gitCommitId: null,
     ledger: [{
       status: 'queued',

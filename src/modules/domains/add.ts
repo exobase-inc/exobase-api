@@ -57,7 +57,9 @@ async function addDomain({ auth, args, services }: Props<Args, Services, t.Platf
     id: model.createId('deployment'),
     platformId,
     domainId,
-    logs: '',
+    logStream: {
+      chunks: []
+    },
     ledger: [{
       status: 'queued',
       timestamp: +new Date(),

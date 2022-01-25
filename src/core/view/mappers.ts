@@ -150,7 +150,9 @@ export class DeploymentView {
         return a.timestamp > b.timestamp ? a : b
       })?.status,
       ledger: deployment.ledger,
-      logs: deployment.logs,
+      logs: _.sort(deployment.logStream?.chunks ?? [], c => c.timestamp).reduce((acc, chunk) => {
+        return `${acc}${chunk.content}`
+      }, ''),
       attributes: deployment.attributes,
       config: deployment.config,
       trigger: deployment.trigger
@@ -181,7 +183,9 @@ export class DomainDeploymentView {
         return a.timestamp > b.timestamp ? a : b
       })?.status,
       ledger: deployment.ledger,
-      logs: deployment.logs
+      logs: _.sort(deployment.logStream?.chunks ?? [], c => c.timestamp).reduce((acc, chunk) => {
+        return `${acc}${chunk.content}`
+      }, ''),
     }
   }
 }

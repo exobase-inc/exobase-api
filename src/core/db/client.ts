@@ -415,18 +415,20 @@ const createMongoClient = (client: Mongo.MongoClient) => {
         }
       })
     }),
-    appendDeploymentLogs: updateOne<t.DeploymentDocument, {
-      id: string
-      logs: string
+    appendDeploymentLogChunk: updateOne<t.DeploymentDocument, {
+      deploymentId: string
+      chunk: t.DeploymentLogStreamChunk
     }>({
       getDb,
       collection: 'deployments',
-      toQuery: ({ id }) => ({
-        _id: new ObjectId(removeIdPrefix(id))
+      toQuery: ({ deploymentId }) => ({
+        _id: new ObjectId(removeIdPrefix(deploymentId))
       }),
-      toUpdate: ({ logs }) => ([{
-        $set: { logs: { $concat: [ "$logs", logs ] } } 
-      }])
+      toUpdate: ({ chunk }) => ({
+        $push: { 
+          'logStream.chunks': chunk
+        }
+      })
     }),
     setDeploymentFunctions: updateOne<t.DeploymentDocument, {
       id: string
@@ -482,7 +484,7 @@ const createMongoClient = (client: Mongo.MongoClient) => {
       toModel: mappers.Membership.fromMembershipDocument
     }),
 
-  
+
     //
     //  REPOSITORY / SERVICE LOOKUP
     //

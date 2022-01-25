@@ -130,6 +130,15 @@ export type Deployment = {
   trigger: DeploymentTrigger
 }
 
+export interface DeploymentLogStreamChunk {
+  content: string
+  timestamp: number
+}
+
+export interface DeploymentLogStream {
+  chunks: DeploymentLogStreamChunk[]
+}
+
 export interface DeploymentTrigger {
   type: 'user' | 'source'
   user?: {

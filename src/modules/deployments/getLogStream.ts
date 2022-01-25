@@ -3,44 +3,47 @@ import * as t from '../../core/types'
 import makeMongo, { MongoClient } from '../../core/db'
 import config from '../../core/config'
 
-import { Props } from '@exobase/core'
-import { useJsonArgs, useService } from '@exobase/hooks'
+import type { Props } from '@exobase/core'
+import { useService, useJsonArgs, useCors } from '@exobase/hooks'
 import { useLambda } from '@exobase/lambda'
 import { useTokenAuthentication } from '@exobase/auth'
 
 
 interface Args {
   deploymentId: string
-  logs: string
 }
 
 interface Services {
   mongo: MongoClient
 }
 
-async function updateDeploymentLogs({ args, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<void> {
+interface Response {
+  logStream: t.DeploymentLogStream
+}
+
+async function getLogStream({ args, services }: Props<Args, Services>): Promise<Response> {
   const { mongo } = services
-  const { logs } = args
-
-  const [err] = await mongo.appendDeploymentLogs({ id: args.deploymentId, logs })
+  const { deploymentId } = args
+  const [err, deployment] = await mongo.findDeploymentById({ id: deploymentId })
   if (err) throw err
-
+  return {
+    logStream: deployment.logStream
+  }
 }
 
 export default _.compose(
   useLambda(),
+  useCors(),
   useTokenAuthentication({
-    type: 'access',
+    type: 'id',
     iss: 'exo.api',
-    scope: 'deployment::update',
     tokenSignatureSecret: config.tokenSignatureSecret
   }),
   useJsonArgs<Args>(yup => ({
-    deploymentId: yup.string().required(),
-    logs: yup.string().default('')
+    deploymentId: yup.string().required()
   })),
   useService<Services>({
     mongo: makeMongo()
   }),
-  updateDeploymentLogs
+  getLogStream
 )

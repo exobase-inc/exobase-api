@@ -57,7 +57,9 @@ async function deployService({ auth, args, services }: Props<Args, Services, t.P
     platformId,
     serviceId,
     timestamp: +new Date(),
-    logs: '',
+    logStream: {
+      chunks: []
+    },
     gitCommitId: null,
     ledger: [{
       status: 'queued',
