@@ -115,10 +115,20 @@ const createMongoClient = (client: Mongo.MongoClient) => {
         _id: new ObjectId(removeIdPrefix(user.id))
       })
     }),
+    findUserId: findItem({
+      getDb,
+      collection: 'users',
+      toQuery: ({ userId }: { userId: string }) => ({ 
+        _id: new ObjectId(removeIdPrefix(userId))
+      }),
+      toModel: mappers.User.fromUserRecord
+    }),
     findUserByEmail: findItem({
       getDb,
       collection: 'users',
-      toQuery: (args: { email: string }) => ({ email: args.email }),
+      toQuery: ({ email }: { email: string }) => ({ 
+        email 
+      }),
       toModel: mappers.User.fromUserRecord
     }),
 
@@ -209,6 +219,21 @@ const createMongoClient = (client: Mongo.MongoClient) => {
       toUpdate: ({ service }) => ({
         $set: {
           [`services.${removeIdPrefix(service.id)}`]: service
+        }
+      })
+    }),
+    updateDomainInPlatform: updateOne<t.PlatformDocument, {
+      id: string
+      domain: t.Domain
+    }>({
+      getDb,
+      collection: 'platforms',
+      toQuery: ({ id }) => ({
+        _id: new ObjectId(removeIdPrefix(id))
+      }),
+      toUpdate: ({ domain }) => ({
+        $set: {
+          [`domains.${removeIdPrefix(domain.id)}`]: domain
         }
       })
     }),

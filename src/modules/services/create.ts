@@ -5,6 +5,7 @@ import makeMongo, { MongoClient } from '../../core/db'
 import model from '../../core/model'
 import config from '../../core/config'
 import { stacks, stackConfigValidator } from '../../core/stacks'
+import BuildPack from '../../core/build-pack'
 
 import { Props, ApiFunction, errors } from '@exobase/core'
 import { useCors, useService, useJsonArgs } from '@exobase/hooks'
@@ -83,7 +84,16 @@ async function createService({ auth, args, services }: Props<Args, Services, t.P
     domain,
     isDeleted: false,
     deleteEvent: null,
-    createdAt: Date.now()
+    createdAt: Date.now(),
+    buildPack: {
+      version: null,
+      name: BuildPack.forService({
+        type: args.type,
+        provider: args.provider,
+        service: args.service,
+        language: args.language
+      })
+    }
   }
 
   await mongo.addServiceToPlatform({ service })

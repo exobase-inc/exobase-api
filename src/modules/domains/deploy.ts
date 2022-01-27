@@ -5,18 +5,16 @@ import makeMongo, { MongoClient } from '../../core/db'
 import makeBuilder, { BuilderApi } from '../../core/builder'
 import model from '../../core/model'
 import config from '../../core/config'
-import BuildPack from '../../core/build-pack'
 
-import type { Props } from '@exobase/core'
-import { errors } from '@exobase/core'
+import { errors, Props } from '@exobase/core'
 import { useCors, useService, useJsonArgs } from '@exobase/hooks'
 import { useLambda } from '@exobase/lambda'
 import { useTokenAuthentication } from '@exobase/auth'
 
 
 interface Args {
-  domain: string
-  provider: t.CloudProvider
+  platformId: string
+  domainId: string
 }
 
 interface Services {
@@ -29,30 +27,21 @@ interface Response {
   deployment: t.DomainDeploymentView
 }
 
-async function addDomain({ auth, args, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<Response> {
+async function deployDomain({ auth, args, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<Response> {
   const { mongo, builder } = services
+  const { domainId } = args
   const { platformId } = auth.token.extra
 
   const [err, platform] = await mongo.findPlatformById({ id: platformId })
   if (err) throw err
 
-  const existingDomain = platform.domains.find(d => d.domain === args.domain)
-  if (existingDomain) {
-    throw errors.badRequest({
-      details: 'Domain already exists',
-      key: 'exo.err.platforms.add-domain.allradius'
+  const domain = platform.domains.find(d => d.id === domainId)
+  if (!domain) {
+    throw errors.notFound({
+      details: 'Could not find a domain with the given id',
+      key: 'exo.err.domains.deploy.nofound'
     })
   }
-
-  const provider = platform.providers[args.provider] as t.AWSProviderConfig
-  if (!provider?.accessKeyId) {
-    throw errors.badRequest({
-      details: `Provider (${args.provider}) has not been configured`,
-      key: 'exo.err.platforms.add-domain.mellowa'
-    })
-  }
-
-  const domainId = model.createId('domain')
 
   const deployment: t.DomainDeployment = {
     id: model.createId('deployment'),
@@ -68,24 +57,14 @@ async function addDomain({ auth, args, services }: Props<Args, Services, t.Platf
     }]
   }
 
-  const domain: t.Domain = {
-    id: domainId,
-    platformId,
-    domain: args.domain,
-    provider: args.provider,
+  const updatedDomain: t.Domain = {
+    ...domain,
     latestDeploymentId: deployment.id,
-    deployments: [deployment],
-    buildPack: {
-      version: null,
-      name: BuildPack.forDomain({
-        provider: args.provider
-      })
-    }
   }
 
   // TODO: Handle errors like a boss
   await mongo.addDomainDeployment(deployment)
-  await mongo.addDomainToPlatform(domain)
+  await mongo.updateDomainInPlatform({ id: platformId, domain: updatedDomain })
 
   await builder.trigger.build({
     args: {
@@ -95,7 +74,13 @@ async function addDomain({ auth, args, services }: Props<Args, Services, t.Platf
   }, { key: config.builderApiKey })
 
   return {
-    domain: mappers.DomainView.fromDomain(domain),
+    domain: mappers.DomainView.fromDomain({
+      ...domain,
+      deployments: [
+        ...domain.deployments,
+        deployment
+      ]
+    }),
     deployment: mappers.DomainDeploymentView.fromDomainDeployment(deployment)
   }
 }
@@ -109,12 +94,12 @@ export default _.compose(
     tokenSignatureSecret: config.tokenSignatureSecret
   }),
   useJsonArgs<Args>(yup => ({
-    domain: yup.string().required(),
-    provider: yup.string().oneOf(['aws', 'gcp']).required()
+    platformId: yup.string().required(),
+    domainId: yup.string().required()
   })),
   useService<Services>({
     mongo: makeMongo(),
     builder: makeBuilder()
   }),
-  addDomain
+  deployDomain
 )

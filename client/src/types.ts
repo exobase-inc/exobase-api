@@ -130,6 +130,11 @@ export type Deployment = {
   trigger: DeploymentTrigger
 }
 
+export interface BuildPack {
+  name: string
+  version: string | null
+}
+
 export interface DeploymentLogStreamChunk {
   content: string
   timestamp: number
@@ -218,6 +223,7 @@ export type Service = {
   isDeleted: boolean
   deleteEvent: DeleteEvent | null
   createdAt: number
+  buildPack: BuildPack
 }
 
 export type PlatformPreview = {
@@ -233,6 +239,7 @@ export type Domain = {
   domain: string
   provider: CloudProvider
   latestDeploymentId: string | null
+  buildPack: BuildPack
 }
 
 export type Platform = {

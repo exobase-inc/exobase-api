@@ -136,6 +136,7 @@ export interface Domain {
   provider: CloudProvider
   latestDeploymentId: string | null
   deployments: DomainDeployment[]
+  buildPack: BuildPack
 }
 
 export interface Platform {
@@ -188,6 +189,11 @@ export type DeleteEvent = {
   source: string
 }
 
+export interface BuildPack {
+  version: string | null
+  name: string
+}
+
 export interface Service {
   id: string
   name: string
@@ -207,6 +213,7 @@ export interface Service {
   isDeleted: boolean
   deleteEvent: DeleteEvent | null
   createdAt: number
+  buildPack: BuildPack
 }
 
 export type DeploymentStatus = 'queued'

@@ -19,6 +19,18 @@ const createApi = (url: string) => {
         module: 'auth',
         function: 'login'
       }),
+      switchPlatform: endpoint<{
+        platformId: string
+      }, {
+        user: t.User
+        platforms: t.PlatformPreview[]
+        platformId: string
+        idToken: string
+        exp: number
+      }>({
+        module: 'auth',
+        function: 'switchPlatform'
+      }),
     },
     deployments: {
       getContext: endpoint<{
@@ -94,9 +106,37 @@ const createApi = (url: string) => {
       }>({
         module: 'domains',
         function: 'add'
-      })
+      }),
+      deploy: endpoint<{
+        platformId: string
+        domainId: string
+      }, {
+        deployment: t.DomainDeployment
+        domain: t.Domain
+      }>({
+        module: 'domains',
+        function: 'deploy'
+      }),
+      setBuildPackVersion: endpoint<{
+        platformId: string
+        domainId: string
+        version: string
+      }, {
+        domain: t.Domain
+      }>({
+        module: 'domains',
+        function: 'setBuildPackVersion'
+      }),
     },
     platforms: {
+      create: endpoint<{
+        name: string
+      }, {
+        platform: t.Platform
+      }>({
+        module: 'platforms',
+        function: 'create'
+      }),
       getById: endpoint<{
         id: string
       }, {
@@ -241,6 +281,16 @@ const createApi = (url: string) => {
       }>({
         module: 'services',
         function: 'getSourceDownloadLink'
+      }),
+      setBuildPackVersion: endpoint<{
+        platformId: string
+        serviceId: string
+        version: string
+      }, {
+        service: t.Service
+      }>({
+        module: 'services',
+        function: 'setBuildPackVersion'
       })
     },
   }

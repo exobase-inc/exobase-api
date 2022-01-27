@@ -69,6 +69,7 @@ export type ServiceView = {
   isDeleted: boolean
   deleteEvent: t.DeleteEvent | null
   createdAt: number
+  buildPack: t.BuildPack
 }
 
 export type PlatformPreviewView = {
@@ -84,6 +85,7 @@ export type DomainView = {
   domain: string
   provider: t.CloudProvider
   latestDeploymentId: string | null
+  buildPack: t.BuildPack
 }
 
 export type PlatformView = {

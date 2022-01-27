@@ -32,7 +32,8 @@ export class DomainView {
       platformId: domain.platformId,
       domain: domain.domain,
       provider: domain.provider,
-      latestDeploymentId: domain.latestDeploymentId
+      latestDeploymentId: domain.latestDeploymentId,
+      buildPack: domain.buildPack
     }
   }
 }
@@ -121,7 +122,8 @@ export class ServiceView {
       domain: service.domain,
       isDeleted: service.isDeleted,
       deleteEvent: service.deleteEvent,
-      createdAt: service.createdAt
+      createdAt: service.createdAt,
+      buildPack: service.buildPack
     }
   }
 }
