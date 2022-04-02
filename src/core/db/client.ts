@@ -100,10 +100,17 @@ const updateOne = <TDocument extends t.MongoDocument, TPatch>({
 }
 
 const createMongoClient = (client: Mongo.MongoClient) => {
-  const dbPromise = client.connect().then(c => c.db('main'))
-  const getDb = async () => dbPromise
+  let dbPromise = client.connect().then(c => c.db('main'))
+  const getDb = () => dbPromise
 
   return {
+    client,
+    connect: async () => {
+      dbPromise = client.connect().then(c => c.db('main'))
+    },
+
+    close: client.close.bind(client) as () => Promise<void>,
+
     //
     // USER
     //

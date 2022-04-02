@@ -8,6 +8,7 @@ import { errors, Props } from '@exobase/core'
 import { useJsonArgs, useService } from '@exobase/hooks'
 import { useLambda } from '@exobase/lambda'
 import { useTokenAuthentication } from '@exobase/auth'
+import { useMongoConnection } from '../../core/hooks/useMongoConnection'
 
 
 interface Args {
@@ -86,5 +87,6 @@ export default _.compose(
     mongo: makeMongo(),
     github: makeGithub
   }),
+  useMongoConnection(),
   getSourceDownloadLink
 )

@@ -12,11 +12,16 @@ const makeMongo = () => {
     mongoInstanceName: instance,
     mongoSubdomain: subdomain
   } = config
-  const uri = `mongodb+srv://${username}:${password}@${instance}.${subdomain}.mongodb.net/main?retryWrites=true&w=majority`
+  const uri = `mongodb+srv://${username}:${password}@${instance}.${subdomain}.mongodb.net/main`
   const client = new Mongo(uri, { 
     // useNewUrlParser: true,
     // useUnifiedTopology: true,
-    serverApi: ServerApiVersion.v1 
+    serverApi: ServerApiVersion.v1 ,
+    maxIdleTimeMS: 50000000,
+    connectTimeoutMS: 50000000,
+    keepAlive: true,
+    retryWrites: true,
+    w: 'majority'
   })
   return createClient(client)
 }

@@ -9,6 +9,7 @@ import { errors } from '@exobase/core'
 import { useService, useJsonArgs } from '@exobase/hooks'
 import { useLambda } from '@exobase/lambda'
 import { useTokenAuthentication } from '@exobase/auth'
+import { useMongoConnection } from '../../core/hooks/useMongoConnection'
 
 
 interface Args {
@@ -81,5 +82,6 @@ export default _.compose(
   useService<Services>({
     mongo: makeMongo()
   }),
+  useMongoConnection(),
   setBuildPackVersion
 )
