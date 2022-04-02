@@ -109,9 +109,21 @@ export class ServiceView {
       activeDeployment,
       hasDeploymentInProgress,
       hasDeployedInfrastructure: (() => {
-        if (!latestDeployment) return false
-        if (!activeDeployment) return false
-        if (activeDeployment.type === 'create') {
+        // If there is no currently active infrastructure but there
+        // is a latest deployment and that latest deployment was a
+        // destory and it was successful then there is no deployed
+        // infrastructure -- return false
+        if (
+          !activeDeployment && 
+          latestDeployment?.type === 'destroy' && 
+          latestDeployment?.status === 'success'
+        ) {
+          return true
+        }
+        // If there is an active deployment and it is a create and it
+        // was either a success of partial success then there is at 
+        // least some infrastucture deployed -- return true
+        if (activeDeployment?.type === 'create') {
           if (activeDeployment.status === 'success') return true
           if (activeDeployment.status === 'partial_success') return true
           return false

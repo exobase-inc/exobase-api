@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "source ./env.sh && ts-node ./src/dev.ts",
     "build": "tsc",
-    "token:builder": "source ./env.sh && ts-node ./src/local/createToken.ts --aud exo.builder --sub exo.builder --scopes 'deployment::read::elevated;deployment::update;instance::update::attributes;services::read'",
+    "token:builder": "source ./env.sh && ts-node ./src/local/createToken.ts --aud exo.builder --sub exo.builder --scopes 'deployment::read::elevated;deployment::update;instance::update::attributes;services::read;service::update'",
     "token:webhook": "source ./env.sh && ts-node ./src/local/createToken.ts --aud exo.webhook --sub exo.webhook --scopes 'services::read;services::deploy'",
     "make-types": "tsc --emitDeclarationOnly --declaration --outDir ./client/src"
   },

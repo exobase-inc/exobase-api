@@ -17,16 +17,28 @@ import { useMongoConnection } from '../../core/hooks/useMongoConnection'
 interface Args {
   name: string
   tags: string[]
-  type: t.ExobaseService
-  provider: t.CloudProvider
-  service: t.CloudService
-  language: t.Language
-  config: t.ServiceConfig
-  source: t.ServiceSource
-  domain: {
+  source: {
+    installation_id: string | null
+    private: boolean
+    repo_id: string
+    owner: string
+    repo: string
+    branch: string
+    provider: 'github' | 'bitbucket' | 'gitlab'
+  }
+  domain: null | {
     domain: string
     subdomain: string
-  } | null
+  }
+  build_pack: {
+    name: string
+    source: 'exo.registry.exobase' | 'exo.registry.community' | 'open-source'
+    type: t.ExobaseService
+    provider: t.CloudProvider
+    service: t.CloudService
+    language: t.Language
+    config: any
+  }
 }
 
 interface Services {

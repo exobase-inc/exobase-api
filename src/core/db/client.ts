@@ -3,17 +3,12 @@ import * as Mongo from 'mongodb'
 import { ObjectId } from 'mongodb'
 import * as t from '../types'
 import * as mappers from './mappers'
-
+import type { Collection } from './collections'
+import migrate, { CURRENT_VERSIONS } from './migrations/client'
 
 const removeIdPrefix = (str: string) => {
   return str.replace(/exo\..+?\./, '')
 }
-
-type Collection = 'platforms'
-  | 'membership'
-  | 'users'
-  | 'deployments'
-  | 'repository_lookup'
 
 const objectifyListById = <T extends { id: string }>(array: T[]): Record<string, T> => {
   return array.reduce((acc, t) => ({
@@ -40,7 +35,24 @@ const addItem = <TDocument, TModel>({
   return [null, model]
 }
 
-const findItem = <TModel, TArgs, TDocument>({
+const addMany = <TDocument, TModel>({
+  getDb,
+  collection,
+  toDocument
+}: {
+  getDb: () => Promise<Mongo.Db>,
+  collection: Collection,
+  toDocument: (model: TModel) => TDocument
+}) => async (models: TModel[]): Promise<[Error, TModel[]]> => {
+  const db = await getDb()
+  const [err] = await _.try(async () => {
+    db.collection<TDocument>(collection).insertMany(models.map(toDocument) as any)
+  })()
+  if (err) return [err, null]
+  return [null, models]
+}
+
+const findItem = <TModel, TArgs, TDocument extends t.MongoDocument>({
   getDb,
   collection,
   toQuery,
@@ -57,10 +69,19 @@ const findItem = <TModel, TArgs, TDocument>({
     return db.collection<TDocument>(collection).findOne(query) as Promise<TDocument>
   })()
   if (err) return [err, null]
-  return [null, toModel(record, args)]
+  const migratedDoc = migrate(collection, record) as TDocument
+  if (migratedDoc) {
+    const runMigrate = addItem({
+      getDb,
+      collection,
+      toDocument: (t) => t
+    })
+    await runMigrate(migratedDoc)
+  }
+  return [null, toModel(migratedDoc ? migratedDoc : record, args)]
 }
 
-const findManyItems = <TModel, TArgs, TDocument>({
+const findManyItems = <TModel, TArgs, TDocument extends t.MongoDocument>({
   getDb,
   collection,
   toQuery,
@@ -77,6 +98,15 @@ const findManyItems = <TModel, TArgs, TDocument>({
   const cursor = db.collection<TDocument>(collection).find(toQuery(args), toOptions?.(args))
   const [err2, records] = await _.try(() => cursor.toArray() as Promise<TDocument[]>)()
   if (err2) return [err2, null]
+  const migratedDocs = records.map(r => migrate(collection, r)).filter(x => !!x) as TDocument[]
+  if (migratedDocs.length > 0) {
+    const runMigrate = addMany({
+      getDb,
+      collection,
+      toDocument: (t) => t
+    })
+    await runMigrate(migratedDocs)
+  }
   return [null, records.map(toModel)]
 }
 
@@ -119,6 +149,7 @@ const createMongoClient = (client: Mongo.MongoClient) => {
       collection: 'users',
       toDocument: (user: t.User): t.UserDocument => ({
         ...user,
+        _version: CURRENT_VERSIONS.users,
         _id: new ObjectId(removeIdPrefix(user.id))
       })
     }),
@@ -147,6 +178,7 @@ const createMongoClient = (client: Mongo.MongoClient) => {
       collection: 'platforms',
       toDocument: (platform: t.Platform): t.PlatformDocument => ({
         ...platform,
+        _version: CURRENT_VERSIONS.platforms,
         _id: new ObjectId(removeIdPrefix(platform.id)),
         services: objectifyListById(platform.services),
         domains: {},
@@ -366,6 +398,7 @@ const createMongoClient = (client: Mongo.MongoClient) => {
       collection: 'deployments',
       toDocument: (deployment: t.Deployment): t.DeploymentDocument => ({
         ...deployment,
+        _version: CURRENT_VERSIONS.deployments,
         _id: new ObjectId(removeIdPrefix(deployment.id)),
         _platformId: new ObjectId(removeIdPrefix(deployment.platformId)),
         _serviceId: new ObjectId(removeIdPrefix(deployment.serviceId))
@@ -376,6 +409,7 @@ const createMongoClient = (client: Mongo.MongoClient) => {
       collection: 'deployments',
       toDocument: (deployment: t.DomainDeployment): t.DomainDeploymentDocument => ({
         ...deployment,
+        _version: CURRENT_VERSIONS.deployments,
         _id: new ObjectId(removeIdPrefix(deployment.id)),
         _platformId: new ObjectId(removeIdPrefix(deployment.platformId)),
         _domainId: new ObjectId(removeIdPrefix(deployment.domainId))
@@ -502,6 +536,7 @@ const createMongoClient = (client: Mongo.MongoClient) => {
       collection: 'membership',
       toDocument: (membership: t.Membership): t.MembershipDocument => ({
         ...membership,
+        _version: CURRENT_VERSIONS.membership,
         _id: new ObjectId(removeIdPrefix(membership.id)),
         _userId: new ObjectId(removeIdPrefix(membership.userId)),
         _platformId: new ObjectId(removeIdPrefix(membership.platformId)),
@@ -525,6 +560,8 @@ const createMongoClient = (client: Mongo.MongoClient) => {
       collection: 'repository_lookup',
       toDocument: (item: t.RepositoryServiceLookupItem): t.RepositoryServiceLookupItemDocument => ({
         ...item,
+        _id: undefined, // Let mongo set this
+        _version: CURRENT_VERSIONS.repository_lookup,
         _serviceId: new ObjectId(removeIdPrefix(item.serviceId)),
         _platformId: new ObjectId(removeIdPrefix(item.platformId)),
       })

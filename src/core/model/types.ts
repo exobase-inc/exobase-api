@@ -32,7 +32,8 @@ export interface Team {
   platforms: string[]
 }
 
-export type SubscriptionEvent = 'subscription.canceled'
+export type SubscriptionEvent =
+  | 'subscription.canceled'
   | 'subscription.started'
   | 'subscription.paused'
   | 'payment.failed'
@@ -65,25 +66,12 @@ export interface SubscriptionPlan {
   }
 }
 
-export type Language = 'typescript'
-  | 'javascript'
-  | 'python'
-  | 'swift'
-  | 'csharp'
-  | 'ruby'
-  | 'php'
-  | 'rust'
-  | 'go'
+export type Language = 'typescript' | 'javascript' | 'python' | 'swift' | 'csharp' | 'ruby' | 'php' | 'rust' | 'go'
 
-export type CloudProvider = 'aws'
-  | 'gcp'
-  | 'vercel'
-  | 'azure'
-  | 'netlify'
-  | 'ibm'
-  | 'heroku'
+export type CloudProvider = 'aws' | 'gcp' | 'vercel' | 'azure' | 'netlify' | 'ibm' | 'heroku'
 
-export type CloudService = 'lambda'
+export type CloudService =
+  | 'lambda'
   | 'ec2'
   | 'ecs'
   | 's3'
@@ -92,17 +80,11 @@ export type CloudService = 'lambda'
   | 'cloud-build'
   | 'code-build'
 
-export type ExobaseService = 'api'
-  | 'app'
-  | 'websocket-server'
-  | 'static-website'
-  | 'task-runner'
+export type ExobaseService = 'api' | 'app' | 'websocket-server' | 'static-website' | 'task-runner'
 
 export type StackKey = `${ExobaseService}:${CloudProvider}:${CloudService}`
 
-export type MembershipAccessLevl = 'owner'
-  | 'developer'
-  | 'auditor'
+export type MembershipAccessLevl = 'owner' | 'developer' | 'auditor'
 
 export interface Membership {
   id: string
@@ -125,9 +107,7 @@ export type GCPProviderConfig = {
   jsonCredentials: string
 }
 
-export type HerokuProviderConfig = {
-
-}
+export type HerokuProviderConfig = {}
 
 export interface Domain {
   id: string
@@ -192,23 +172,23 @@ export type DeleteEvent = {
 export interface BuildPack {
   version: string | null
   name: string
+  source: 'exo.registry.exobase' | 'exo.registry.community' | 'open-source'
+  type: ExobaseService
+  provider: CloudProvider
+  service: CloudService
+  language: Language
+  config: any
 }
 
 export interface Service {
   id: string
   name: string
-  platformId: string
-  provider: CloudProvider
-  service: CloudService
-  type: ExobaseService
-  language: Language
-  stack: StackKey
-  source: ServiceSource
   tags: string[]
-  deployments: Deployment[]
+  platformId: string
+  stackName: string
+  source: ServiceSource
   latestDeployment: Deployment | null
   activeDeployment: Deployment | null
-  config: ServiceConfig
   domain: ServiceDomainConfig | null
   isDeleted: boolean
   deleteEvent: DeleteEvent | null
@@ -216,12 +196,7 @@ export interface Service {
   buildPack: BuildPack
 }
 
-export type DeploymentStatus = 'queued'
-  | 'canceled'
-  | 'in_progress'
-  | 'success'
-  | 'partial_success'
-  | 'failed'
+export type DeploymentStatus = 'queued' | 'canceled' | 'in_progress' | 'success' | 'partial_success' | 'failed'
 
 export interface DeploymentLedgerItem {
   status: DeploymentStatus
@@ -287,13 +262,11 @@ export interface RepositoryServiceLookupItem {
   platformId: string
 }
 
-export interface  StackConfig {
+export interface StackConfig {
   stack: StackKey
 }
 
-export type AnyStackConfig = TaskRunnerAWSCodeBuildStackConfig
-  | ApiAWSLambdaStackConfig
-  | StaticWebsiteAWSS3StackConfig
+export type AnyStackConfig = TaskRunnerAWSCodeBuildStackConfig | ApiAWSLambdaStackConfig | StaticWebsiteAWSS3StackConfig
 
 export interface TaskRunnerAWSCodeBuildStackConfig extends StackConfig {
   stack: 'task-runner:aws:code-build'

@@ -11,7 +11,12 @@ export const username = (email: string) => {
   return email.replace(/@.+/, '')
 }
 
+export const stackName = (buildPackName: string, serviceId: string) => {
+  return `${buildPackName}-${serviceId}`.replace(/[\.\-\s]/g, '_')
+}
+
 export default {
   username,
-  createId
+  createId,
+  stackName
 }
