@@ -49,27 +49,22 @@ export type ServiceView = {
   _view: 'exo.service'
   id: string
   name: string
-  platformId: string
-  provider: t.CloudProvider
-  service: t.CloudService
-  type: t.ExobaseService
-  language: t.Language
-  source: t.ServiceSource
-  stack: t.StackKey
   tags: string[]
+  platformId: string
+  stackName: string
+  source: t.ServiceSource
   deployments: DeploymentView[]
   latestDeploymentId: string | null
   latestDeployment: DeploymentView | null
   activeDeploymentId: string | null
   activeDeployment: DeploymentView | null
-  config: t.ServiceConfig
   domain: t.ServiceDomainConfig | null
   hasDeployedInfrastructure: boolean
   hasDeploymentInProgress: boolean
   isDeleted: boolean
   deleteEvent: t.DeleteEvent | null
   createdAt: number
-  buildPack: t.BuildPack
+  pack: t.BuildPackageRef
 }
 
 export type PlatformPreviewView = {
@@ -85,7 +80,7 @@ export type DomainView = {
   domain: string
   provider: t.CloudProvider
   latestDeploymentId: string | null
-  buildPack: t.BuildPack
+  pack: t.BuildPackageRef
 }
 
 export type PlatformView = {

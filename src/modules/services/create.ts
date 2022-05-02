@@ -4,29 +4,29 @@ import mappers from '../../core/view/mappers'
 import makeMongo, { MongoClient } from '../../core/db'
 import model from '../../core/model'
 import config from '../../core/config'
-import { stacks, stackConfigValidator } from '../../core/stacks'
-import BuildPack from '../../core/build-pack'
-
-import { Props, ApiFunction, errors } from '@exobase/core'
+import { Props, errors } from '@exobase/core'
 import { useCors, useService, useJsonArgs } from '@exobase/hooks'
 import { useLambda } from '@exobase/lambda'
 import { useTokenAuthentication } from '@exobase/auth'
-import { useMongoConnection } from '../../core/hooks/useMongoConnection'
-
 
 interface Args {
   name: string
   tags: string[]
-  type: t.ExobaseService
-  provider: t.CloudProvider
-  service: t.CloudService
-  language: t.Language
-  config: t.ServiceConfig
-  source: t.ServiceSource
-  domain: {
+  build_pack_id: string
+  config: any
+  source: {
+    installation_id: string | null
+    private: boolean
+    repo_id: string
+    owner: string
+    repo: string
+    branch: string
+    provider: 'github' | 'bitbucket' | 'gitlab'
+  }
+  domain: null | {
     domain: string
     subdomain: string
-  } | null
+  }
 }
 
 interface Services {
@@ -43,9 +43,31 @@ async function createService({ auth, args, services }: Props<Args, Services, t.P
 
   const [err, platform] = await mongo.findPlatformById({ id: platformId })
   if (err) {
+    console.error(err)
+    throw errors.notFound({
+      details: 'Could not find a platform matching the current session',
+      key: 'exo.err.services.create.noplat-err'
+    })
+  }
+  if (!platform) {
     throw errors.notFound({
       details: 'Could not find a platform matching the current session',
       key: 'exo.err.services.create.noplat'
+    })
+  }
+
+  const [derr, buildPackage] = await mongo.findBuildPackage({ id: args.build_pack_id })
+  if (derr) {
+    console.error(derr)
+    throw errors.notFound({
+      details: 'Could not find a build package matching the given id',
+      key: 'exo.err.services.create.no-build-pack-err'
+    })
+  }
+  if (!buildPackage) {
+    throw errors.notFound({
+      details: 'Could not find a build package matching the given id',
+      key: 'exo.err.services.create.no-build-pack'
     })
   }
 
@@ -67,33 +89,33 @@ async function createService({ auth, args, services }: Props<Args, Services, t.P
     }
   })()
 
+  const id = model.createId('service')
   const service: t.Service = {
-    id: model.createId('service'),
+    id,
     name: args.name,
-    platformId,
     tags: args.tags,
-    provider: args.provider,
-    service: args.service,
-    type: args.type,
-    language: args.language,
-    stack: `${args.type}:${args.provider}:${args.service}`,
-    source: args.source,
+    platformId,
+    stackName: id.replace(/\./, ''),
     deployments: [],
     latestDeployment: null,
     activeDeployment: null,
     config: args.config,
+    source: {
+      installationId: args.source.installation_id,
+      private: args.source.private,
+      repoId: args.source.repo_id,
+      owner: args.source.owner,
+      repo: args.source.repo,
+      branch: args.source.branch,
+      provider: args.source.provider
+    },
     domain,
     isDeleted: false,
     deleteEvent: null,
     createdAt: Date.now(),
-    buildPack: {
-      version: null,
-      name: BuildPack.forService({
-        type: args.type,
-        provider: args.provider,
-        service: args.service,
-        language: args.language
-      })
+    pack: {
+      ...buildPackage,
+      version: null // set during first deployment
     }
   }
 
@@ -109,14 +131,6 @@ async function createService({ auth, args, services }: Props<Args, Services, t.P
   }
 }
 
-export type RootHook = (func: ApiFunction<any, any>) => (...rest: any[]) => any
-export const useDynamicRoot = (
-  roots: Record<string, RootHook>,
-  getRootKey: () => string = () => process.env.EXO_ROOT_HOOK
-) => {
-  return roots[getRootKey()]
-}
-
 export default _.compose(
   useLambda(),
   useCors(),
@@ -128,22 +142,7 @@ export default _.compose(
   useJsonArgs<Args>(yup => ({
     name: yup.string().required(),
     tags: yup.array().of(yup.string()).required(),
-    type: yup.string().required(),
-    provider: yup.string().required(),
-    service: yup.string().required(),
-    language: yup.string().required(),
-    config: yup.object({
-      type: yup.string().oneOf(stacks).required(),
-      environmentVariables: yup.array().of(yup.object({
-        name: yup.string().required(),
-        value: yup.string().required()
-      })),
-      stack: stackConfigValidator(yup)
-    }),
-    domain: yup.object({ // TODO: Improve validation + .required()
-      subdomain: yup.string(),
-      domain: yup.string()
-    }).nullable(),
+    build_pack_id: yup.string().required(),
     source: yup.object({
       installationId: yup.string().nullable(),
       private: yup.boolean(),
@@ -152,11 +151,15 @@ export default _.compose(
       repo: yup.string().required(),
       branch: yup.string().required(),
       provider: yup.string().oneOf(['github', 'bitbucket', 'gitlab'])
-    }).required()
+    }).required(),
+    domain: yup.object({ // TODO: Improve validation + .required()
+      subdomain: yup.string(),
+      domain: yup.string()
+    }).nullable(),
+    config: yup.mixed().default({})
   })),
   useService<Services>({
     mongo: makeMongo()
   }),
-  useMongoConnection(),
   createService
 )

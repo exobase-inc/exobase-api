@@ -41,7 +41,7 @@ async function setBuildPackVersion({ args, services }: Props<Args, Services, t.P
     })
   }
 
-  if (domain.buildPack.version) {
+  if (domain.pack.version) {
     throw errors.badRequest({
       details: 'The build pack version is immutable and has already been set',
       key: 'exo.err.domains.set-build-pack-version.immutable'
@@ -50,9 +50,9 @@ async function setBuildPackVersion({ args, services }: Props<Args, Services, t.P
 
   const newDomain: t.Domain = {
     ...domain,
-    buildPack: {
-      name: domain.buildPack.name,
-      version
+    pack: {
+      ...domain.pack,
+      // version
     }
   }
 

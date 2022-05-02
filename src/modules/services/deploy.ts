@@ -44,7 +44,7 @@ async function deployService({ auth, args, services }: Props<Args, Services, t.P
     })
   }
 
-  const providerConfig = platform.providers[service.provider]
+  const providerConfig = platform.providers[service.pack.provider]
   if (!providerConfig) {
     throw errors.badRequest({
       details: 'Attempting to deploy a service to a cloud provider that has not been configured',

@@ -44,7 +44,7 @@ async function destroyService({ auth, args, services }: Props<Args, Services, t.
     })
   }
 
-  const providerConfig = platform.providers[service.provider]
+  const providerConfig = platform.providers[service.pack.provider]
   if (!providerConfig) {
     throw errors.badRequest({
       details: 'Attempting to destroy a service on a cloud provider that has not been configured',

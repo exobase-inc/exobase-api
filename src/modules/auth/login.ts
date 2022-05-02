@@ -52,7 +52,8 @@ async function loginOrCreateUser({ services, auth }: Props<Args, Services, Magic
       did,
       email,
       acl: 'user',
-      username: model.username(email)
+      username: model.username(email),
+      thumbnailUrl: null
     }
     const membership: t.Membership = {
       id: model.createId('membership'),

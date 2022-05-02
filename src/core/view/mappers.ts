@@ -33,7 +33,7 @@ export class DomainView {
       domain: domain.domain,
       provider: domain.provider,
       latestDeploymentId: domain.latestDeploymentId,
-      buildPack: domain.buildPack
+      pack: domain.pack
     }
   }
 }
@@ -95,13 +95,9 @@ export class ServiceView {
       id: service.id,
       name: service.name,
       platformId: service.platformId,
-      provider: service.provider,
-      type: service.type,
+      stackName: service.stackName,
       source: service.source,
-      service: service.service,
-      language: service.language,
       tags: service.tags,
-      stack: service.stack,
       deployments: (service.deployments ?? []).map(DeploymentView.fromDeployment),
       latestDeploymentId: service.latestDeployment?.id ?? null,
       activeDeploymentId: service.activeDeployment?.id ?? null,
@@ -109,21 +105,32 @@ export class ServiceView {
       activeDeployment,
       hasDeploymentInProgress,
       hasDeployedInfrastructure: (() => {
-        if (!latestDeployment) return false
-        if (!activeDeployment) return false
-        if (activeDeployment.type === 'create') {
+        // If there is no currently active infrastructure but there
+        // is a latest deployment and that latest deployment was a
+        // destory and it was successful then there is no deployed
+        // infrastructure -- return false
+        if (
+          !activeDeployment && 
+          latestDeployment?.type === 'destroy' && 
+          latestDeployment?.status === 'success'
+        ) {
+          return true
+        }
+        // If there is an active deployment and it is a create and it
+        // was either a success of partial success then there is at 
+        // least some infrastucture deployed -- return true
+        if (activeDeployment?.type === 'create') {
           if (activeDeployment.status === 'success') return true
           if (activeDeployment.status === 'partial_success') return true
           return false
         }
         return false
       })(),
-      config: service.config,
       domain: service.domain,
       isDeleted: service.isDeleted,
       deleteEvent: service.deleteEvent,
       createdAt: service.createdAt,
-      buildPack: service.buildPack
+      pack: service.pack
     }
   }
 }

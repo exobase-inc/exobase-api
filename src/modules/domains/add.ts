@@ -5,8 +5,6 @@ import makeMongo, { MongoClient } from '../../core/db'
 import makeBuilder, { BuilderApi } from '../../core/builder'
 import model from '../../core/model'
 import config from '../../core/config'
-import BuildPack from '../../core/build-pack'
-
 import type { Props } from '@exobase/core'
 import { errors } from '@exobase/core'
 import { useCors, useService, useJsonArgs } from '@exobase/hooks'
@@ -14,10 +12,10 @@ import { useLambda } from '@exobase/lambda'
 import { useTokenAuthentication } from '@exobase/auth'
 import { useMongoConnection } from '../../core/hooks/useMongoConnection'
 
-
 interface Args {
   domain: string
   provider: t.CloudProvider
+  build_pack_id: string
 }
 
 interface Services {
@@ -53,6 +51,21 @@ async function addDomain({ auth, args, services }: Props<Args, Services, t.Platf
     })
   }
 
+  const [derr, buildPackage] = await mongo.findBuildPackage({ id: args.build_pack_id })
+  if (derr) {
+    console.error(derr)
+    throw errors.notFound({
+      details: 'Could not find a build package matching the given id',
+      key: 'exo.err.domains.add.no-build-pack-err'
+    })
+  }
+  if (!buildPackage) {
+    throw errors.notFound({
+      details: 'Could not find a build package matching the given id',
+      key: 'exo.err.domains.add.no-build-pack'
+    })
+  }
+
   const domainId = model.createId('domain')
 
   const deployment: t.DomainDeployment = {
@@ -76,11 +89,9 @@ async function addDomain({ auth, args, services }: Props<Args, Services, t.Platf
     provider: args.provider,
     latestDeploymentId: deployment.id,
     deployments: [deployment],
-    buildPack: {
-      version: null,
-      name: BuildPack.forDomain({
-        provider: args.provider
-      })
+    pack: {
+      ...buildPackage,
+      version: null
     }
   }
 
@@ -111,7 +122,8 @@ export default _.compose(
   }),
   useJsonArgs<Args>(yup => ({
     domain: yup.string().required(),
-    provider: yup.string().oneOf(['aws', 'gcp']).required()
+    provider: yup.string().oneOf(['aws', 'gcp']).required(),
+    build_pack_id: yup.string().required()
   })),
   useService<Services>({
     mongo: makeMongo(),

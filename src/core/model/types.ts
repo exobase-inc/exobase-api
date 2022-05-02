@@ -1,4 +1,3 @@
-
 //
 //  LEGEND
 //
@@ -9,6 +8,9 @@
 //  should never be exposed to the user -- namely in the mappers.
 //
 
+export type Model = 'user' | 'platform' | 'service'
+export type Id <TModel extends Model> = `exo.${Model}.${string}`
+
 export type UserAccessControlLevel = 'user' | 'admin'
 
 export interface User {
@@ -17,6 +19,7 @@ export interface User {
   email: string
   acl: UserAccessControlLevel
   username: string
+  thumbnailUrl: string
   // subscription: Subscription
   // _stripeCustomerId: string
   // teams: string[]
@@ -32,7 +35,8 @@ export interface Team {
   platforms: string[]
 }
 
-export type SubscriptionEvent = 'subscription.canceled'
+export type SubscriptionEvent =
+  | 'subscription.canceled'
   | 'subscription.started'
   | 'subscription.paused'
   | 'payment.failed'
@@ -65,25 +69,12 @@ export interface SubscriptionPlan {
   }
 }
 
-export type Language = 'typescript'
-  | 'javascript'
-  | 'python'
-  | 'swift'
-  | 'csharp'
-  | 'ruby'
-  | 'php'
-  | 'rust'
-  | 'go'
+export type Language = 'typescript' | 'javascript' | 'python' | 'swift' | 'csharp' | 'ruby' | 'php' | 'rust' | 'go'
 
-export type CloudProvider = 'aws'
-  | 'gcp'
-  | 'vercel'
-  | 'azure'
-  | 'netlify'
-  | 'ibm'
-  | 'heroku'
+export type CloudProvider = 'aws' | 'gcp' | 'vercel' | 'azure' | 'netlify' | 'ibm' | 'heroku'
 
-export type CloudService = 'lambda'
+export type CloudService =
+  | 'lambda'
   | 'ec2'
   | 'ecs'
   | 's3'
@@ -92,17 +83,11 @@ export type CloudService = 'lambda'
   | 'cloud-build'
   | 'code-build'
 
-export type ExobaseService = 'api'
-  | 'app'
-  | 'websocket-server'
-  | 'static-website'
-  | 'task-runner'
+export type ExobaseService = 'api' | 'app' | 'websocket-server' | 'static-website' | 'task-runner' | 'domain'
 
 export type StackKey = `${ExobaseService}:${CloudProvider}:${CloudService}`
 
-export type MembershipAccessLevl = 'owner'
-  | 'developer'
-  | 'auditor'
+export type MembershipAccessLevl = 'owner' | 'developer' | 'auditor'
 
 export interface Membership {
   id: string
@@ -125,9 +110,7 @@ export type GCPProviderConfig = {
   jsonCredentials: string
 }
 
-export type HerokuProviderConfig = {
-
-}
+export type HerokuProviderConfig = {}
 
 export interface Domain {
   id: string
@@ -136,7 +119,7 @@ export interface Domain {
   provider: CloudProvider
   latestDeploymentId: string | null
   deployments: DomainDeployment[]
-  buildPack: BuildPack
+  pack: BuildPackageRef
 }
 
 export interface Platform {
@@ -189,39 +172,25 @@ export type DeleteEvent = {
   source: string
 }
 
-export interface BuildPack {
-  version: string | null
-  name: string
-}
-
 export interface Service {
   id: string
   name: string
-  platformId: string
-  provider: CloudProvider
-  service: CloudService
-  type: ExobaseService
-  language: Language
-  stack: StackKey
-  source: ServiceSource
   tags: string[]
+  platformId: string
+  stackName: string
+  source: ServiceSource
   deployments: Deployment[]
   latestDeployment: Deployment | null
   activeDeployment: Deployment | null
-  config: ServiceConfig
   domain: ServiceDomainConfig | null
   isDeleted: boolean
   deleteEvent: DeleteEvent | null
   createdAt: number
-  buildPack: BuildPack
+  pack: BuildPackageRef
+  config: any // Shape determined by build pack input
 }
 
-export type DeploymentStatus = 'queued'
-  | 'canceled'
-  | 'in_progress'
-  | 'success'
-  | 'partial_success'
-  | 'failed'
+export type DeploymentStatus = 'queued' | 'canceled' | 'in_progress' | 'success' | 'partial_success' | 'failed'
 
 export interface DeploymentLedgerItem {
   status: DeploymentStatus
@@ -287,13 +256,11 @@ export interface RepositoryServiceLookupItem {
   platformId: string
 }
 
-export interface  StackConfig {
+export interface StackConfig {
   stack: StackKey
 }
 
-export type AnyStackConfig = TaskRunnerAWSCodeBuildStackConfig
-  | ApiAWSLambdaStackConfig
-  | StaticWebsiteAWSS3StackConfig
+export type AnyStackConfig = TaskRunnerAWSCodeBuildStackConfig | ApiAWSLambdaStackConfig | StaticWebsiteAWSS3StackConfig
 
 export interface TaskRunnerAWSCodeBuildStackConfig extends StackConfig {
   stack: 'task-runner:aws:code-build'
@@ -315,4 +282,61 @@ export interface StaticWebsiteAWSS3StackConfig extends StackConfig {
   distDir: string
   preBuildCommand: string
   buildCommand: string
+}
+
+export interface BuildPackage {
+  id: string
+  name: string
+  type: ExobaseService
+  provider: CloudProvider
+  service: CloudService | null
+  language: Language | null
+  owner: string
+  versions: BuildPackageVersion[]
+  addedBy: Pick<User, 'id' | 'email' | 'username' | 'thumbnailUrl'>
+  addedById: Id<'user'>
+  addedAt: number
+}
+
+export interface BuildPackageVersion {
+  version: string
+  source: string
+  publishedAt: number
+  readme: string
+  inputs: {
+    name: string
+    type: string
+    description: string
+    default: string
+    required: boolean
+  }[]
+  outputs: {
+    name: string
+    description: string
+  }[]
+}
+
+export type BuildPackageRef = Omit<BuildPackage, 'versions'> & {
+  version: BuildPackageVersion
+}
+
+// exo publish --version 0.1.1
+//
+// 1. verify version
+// 2. push to github
+// 3. record github address
+
+export type BuildPackageManifest = {
+  type?: ExobaseService
+  service?: CloudService
+  language?: Language
+  inputs?: Record<
+    string,
+    {
+      type: 'string' | 'number' | 'envars'
+    }
+  >
+  build?: {
+    before?: string
+  }
 }

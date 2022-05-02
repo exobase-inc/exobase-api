@@ -99,6 +99,5 @@ export default _.compose(
     mongo: makeMongo(),
     builder: makeBuilder()
   }),
-  useMongoConnection(),
   automatedDeployService
 )

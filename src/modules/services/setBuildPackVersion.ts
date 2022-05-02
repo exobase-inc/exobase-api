@@ -9,8 +9,6 @@ import { errors } from '@exobase/core'
 import { useService, useJsonArgs } from '@exobase/hooks'
 import { useLambda } from '@exobase/lambda'
 import { useTokenAuthentication } from '@exobase/auth'
-import { useMongoConnection } from '../../core/hooks/useMongoConnection'
-
 
 interface Args {
   platformId: string
@@ -41,7 +39,7 @@ async function setBuildPackVersion({ args, services }: Props<Args, Services, t.P
     })
   }
 
-  if (service.buildPack.version) {
+  if (service.pack.version) {
     throw errors.badRequest({
       details: 'The build pack version is immutable and has already been set',
       key: 'exo.err.services.set-build-pack-version.immutable'
@@ -50,9 +48,9 @@ async function setBuildPackVersion({ args, services }: Props<Args, Services, t.P
 
   const newService: t.Service = {
     ...service,
-    buildPack: {
-      name: service.buildPack.name,
-      version
+    pack: {
+      ...service.pack,
+      // version
     }
   }
 
@@ -82,6 +80,5 @@ export default _.compose(
   useService<Services>({
     mongo: makeMongo()
   }),
-  useMongoConnection(),
   setBuildPackVersion
 )
