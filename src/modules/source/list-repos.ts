@@ -3,15 +3,15 @@ import * as t from '../../core/types'
 import makeMongo, { MongoClient } from '../../core/db'
 import makeGithub, { GithubApiMaker } from '../../core/github'
 import config from '../../core/config'
-
 import { errors, Props } from '@exobase/core'
-import { useCors, useService } from '@exobase/hooks'
+import { useCors, useJsonArgs, useService } from '@exobase/hooks'
 import { useLambda } from '@exobase/lambda'
 import { useTokenAuthentication } from '@exobase/auth'
-import { useMongoConnection } from '../../core/hooks/useMongoConnection'
 
-
-interface Args { }
+interface Args {
+  workspaceId: t.Id<'workspace'>
+  platformId: t.Id<'platform'>
+}
 
 interface Services {
   mongo: MongoClient
@@ -27,28 +27,33 @@ interface Response {
   }[]
 }
 
-async function listAvailableRepositories({ auth, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<Response> {
+async function listAvailableRepositories({
+  args,
+  auth,
+  services
+}: Props<Args, Services, t.PlatformTokenAuth>): Promise<Response> {
   const { mongo, github } = services
-  const { platformId } = auth.token.extra
+  const { workspaceId } = auth.token.extra
 
-  const [err, platform] = await mongo.findPlatformById({ id: platformId })
-  if (err) throw err
+  const workspace = await mongo.findWorkspaceById(workspaceId)
+  const platform = workspace.platforms.find(p => p.id === args.platformId)
 
-  const installations = platform._githubInstallations
-  if (!installations || installations.length === 0) {
+  if (platform.sources.length === 0) {
     throw errors.badRequest({
       details: 'The Exobase Bot github app has not been installed and connected to the current platform',
       key: 'exo.err.platforms.list-available-repositories.mankey'
     })
   }
 
-  const responses = await Promise.all(installations.map(({ id }) => {
-    return _.try(github(id).listAvailableRepositories)().then(([ error, result ]) => ({ 
-      error, 
-      repositories: result.repositories, 
-      id
-    }))
-  }))
+  const responses = await Promise.all(
+    platform.sources.map(({ _installationId }) => {
+      return _.try(github(_installationId).listAvailableRepositories)().then(([error, result]) => ({
+        error,
+        repositories: result.repositories,
+        id: _installationId
+      }))
+    })
+  )
 
   const failures = responses.map(r => r.error).filter(err => !!err)
 
@@ -60,12 +65,16 @@ async function listAvailableRepositories({ auth, services }: Props<Args, Service
     })
   }
 
-  const repositories = _.flat(responses.map(r => r.repositories.map(x => ({  
-    id: `${x.id}`,
-    repo: x.name,
-    owner: x.owner,
-    installationId: r.id 
-  }))))
+  const repositories = _.flat(
+    responses.map(r =>
+      r.repositories.map(x => ({
+        id: `${x.id}`,
+        repo: x.name,
+        owner: x.owner,
+        installationId: r.id
+      }))
+    )
+  )
 
   return {
     repositories
@@ -80,10 +89,13 @@ export default _.compose(
     iss: 'exo.api',
     tokenSignatureSecret: config.tokenSignatureSecret
   }),
+  useJsonArgs(yup => ({
+    workspaceId: yup.string().required(),
+    platformId: yup.string().required()
+  })),
   useService<Services>({
     mongo: makeMongo(),
     github: makeGithub
   }),
-  useMongoConnection(),
   listAvailableRepositories
 )

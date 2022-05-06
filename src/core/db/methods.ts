@@ -15,14 +15,11 @@ export const addItem =
     collection: Collection
     toDocument: (model: TModel) => TDocument
   }) =>
-  async (model: TModel): Promise<[Error, TModel]> => {
+  async (model: TModel): Promise<TModel> => {
     const record: TDocument = toDocument(model)
     const db = await dbPromise
-    const [err] = await _.try(() => {
-      return db.collection<TDocument>(collection).insertOne(record as any)
-    })()
-    if (err) return [err, null]
-    return [null, model]
+    await db.collection<TDocument>(collection).insertOne(record as any)
+    return model
   }
 
 export const findItem =
@@ -37,15 +34,12 @@ export const findItem =
     toQuery: (args: TArgs) => Mongo.Filter<TDocument>
     toModel: (record: TDocument, args?: TArgs) => TModel
   }) =>
-  async (args: TArgs): Promise<[Error, TModel]> => {
+  async (args: TArgs): Promise<TModel|null> => {
     const query = toQuery(args)
     const db = await dbPromise
-    const [err, record] = await _.try(() => {
-      return db.collection<TDocument>(collection).findOne(query) as Promise<TDocument>
-    })()
-    if (err) return [err, null]
+    const record = await db.collection<TDocument>(collection).findOne(query) as TDocument
     // const [r] = await migrations.ensureMigrated(db, collection, [record])
-    return [null, toModel(record, args)]
+    return toModel(record, args)
   }
 
 export const findManyItems =
@@ -62,13 +56,12 @@ export const findManyItems =
     toOptions?: (args: TArgs) => Mongo.FindOptions<Mongo.Document>
     toModel: (record: TDocument) => TModel
   }) =>
-  async (args: TArgs): Promise<[Error, TModel[]]> => {
+  async (args: TArgs): Promise<TModel[]> => {
     const db = await dbPromise
     const cursor = db.collection<TDocument>(collection).find(toQuery(args), toOptions?.(args))
-    const [err2, records] = await _.try(() => cursor.toArray() as Promise<TDocument[]>)()
-    if (err2) return [err2, null]
+    const records = await cursor.toArray() as TDocument[]
     // const rs = await migrations.ensureMigrated(db, collection, records)
-    return [null, records.map(toModel)]
+    return records.map(toModel)
   }
 
 
@@ -84,14 +77,12 @@ export const queryAll =
     toOptions?: (args: TArgs) => Mongo.FindOptions<Mongo.Document>
     toModel: (record: TDocument) => TModel
   }) =>
-  async (args?: TArgs): Promise<[Error, TModel[]]> => {
+  async (args?: TArgs): Promise<TModel[]> => {
     const db = await dbPromise
     const col = db.collection<TDocument>(collection)
     const cursor = col.find({}, toOptions?.(args))
-    const [err2, records] = await _.try(() => cursor.toArray() as Promise<TDocument[]>)()
-    if (err2) return [err2, null]
-    // const rs = await migrations.ensureMigrated(db, collection, records)
-    return [null, records.map(toModel)]
+    const records = await cursor.toArray() as TDocument[]
+    return records.map(toModel)
   }
 
 export const updateOne =
@@ -106,11 +97,7 @@ export const updateOne =
     toQuery: (patch: TPatch) => Mongo.Filter<TDocument>
     toUpdate: (patch: TPatch) => Partial<TDocument> | Mongo.UpdateFilter<TDocument>
   }) =>
-  async (patch: TPatch): Promise<[Error, void]> => {
+  async (patch: TPatch): Promise<void> => {
     const db = await dbPromise
-    const [err] = await _.try(() => {
-      return db.collection<TDocument>(collection).updateOne(toQuery(patch), toUpdate(patch), {})
-    })()
-    if (err) return [err, null]
-    return [null, null]
+    await db.collection<TDocument>(collection).updateOne(toQuery(patch), toUpdate(patch), {})
   }

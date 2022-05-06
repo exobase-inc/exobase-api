@@ -7,11 +7,9 @@ import type { Props } from '@exobase/core'
 import { useService, useJsonArgs, useCors } from '@exobase/hooks'
 import { useLambda } from '@exobase/lambda'
 import { useTokenAuthentication } from '@exobase/auth'
-import { useMongoConnection } from '../../core/hooks/useMongoConnection'
-
 
 interface Args {
-  deploymentId: string
+  logId: t.Id<'log'>
 }
 
 interface Services {
@@ -19,16 +17,17 @@ interface Services {
 }
 
 interface Response {
-  logStream: t.DeploymentLogStream
+  stream: {
+    timestamp: number
+    content: string
+  }[]
 }
 
-async function getLogStream({ args, services }: Props<Args, Services>): Promise<Response> {
+async function pullLogStream({ args, services }: Props<Args, Services>): Promise<Response> {
   const { mongo } = services
-  const { deploymentId } = args
-  const [err, deployment] = await mongo.findDeploymentById({ id: deploymentId })
-  if (err) throw err
+  const log = await mongo.findLog(args.logId)
   return {
-    logStream: deployment.logStream
+    stream: log.stream
   }
 }
 
@@ -41,11 +40,13 @@ export default _.compose(
     tokenSignatureSecret: config.tokenSignatureSecret
   }),
   useJsonArgs<Args>(yup => ({
-    deploymentId: yup.string().required()
+    logId: yup
+      .string()
+      .matches(/^exo\.log\.[a-z0-9]+$/)
+      .required()
   })),
   useService<Services>({
     mongo: makeMongo()
   }),
-  useMongoConnection(),
-  getLogStream
+  pullLogStream
 )

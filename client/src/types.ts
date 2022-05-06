@@ -1,25 +1,13 @@
-
-export type UserAccessControlLevel = 'user' | 'admin'
-
-export type Language = 'typescript'
-  | 'javascript'
-  | 'python'
-  | 'swift'
-  | 'csharp'
-  | 'ruby'
-  | 'php'
-  | 'rust'
-  | 'go'
-
-export type CloudProvider = 'aws'
-  | 'gcp'
-  | 'vercel'
-  | 'azure'
-  | 'netlify'
-  | 'ibm'
-  | 'heroku'
-
-export type CloudService = 'lambda'
+export type Model = 'user' | 'workspace' | 'platform' | 'unit' | 'domain' | 'pack' | 'deploy' | 'log'
+export type Id<TModel extends Model = Model> = `exo.${TModel}.${string}`
+export type Language = 'typescript' | 'javascript' | 'python' | 'swift' | 'csharp' | 'ruby' | 'php' | 'rust' | 'go'
+export type CloudProvider = 'aws' | 'gcp'
+export type ExobaseService = 'api' | 'app' | 'websocket-server' | 'static-website' | 'task-runner' | 'domain'
+export type UserRole = 'user' | 'admin'
+export type MemberRole = 'owner' | 'admin' | 'developer' | 'guest'
+export type DeploymentStatus = 'queued' | 'canceled' | 'in_progress' | 'success' | 'partial_success' | 'failed'
+export type CloudService =
+  | 'lambda'
   | 'ec2'
   | 'ecs'
   | 's3'
@@ -28,202 +16,120 @@ export type CloudService = 'lambda'
   | 'cloud-build'
   | 'code-build'
 
-export type ExobaseService = 'api'
-  | 'app'
-  | 'websocket-server'
-  | 'static-website'
-  | 'task-runner'
-
-export type StackKey = `${ExobaseService}:${CloudProvider}:${CloudService}`
-
-export type MembershipAccessLevl = 'owner'
-  | 'developer'
-  | 'auditor'
-
-export interface Membership {
-  id: string
-  userId: string
-  platformId: string
-  acl: MembershipAccessLevl
-}
-
-export type VercelProviderConfig = {
-  token: string
-}
-
-export type AWSProviderConfig = {
-  accessKeyId: string
-  accessKeySecret: string
-  region: string
-}
-
-export type GCPProviderConfig = {
-  jsonCredentials: string
-}
-
-export type HerokuProviderConfig = {
-
-}
-
-export type DeploymentStatus = 'queued'
-  | 'canceled'
-  | 'in_progress'
-  | 'success'
-  | 'partial_success'
-  | 'failed'
-
-export interface DeploymentLedgerItem {
-  status: DeploymentStatus
-  timestamp: number
-  source: string
-}
-
-export interface ExobaseFunction {
-  module: string
-  function: string
-}
-
-export interface RepositoryServiceLookupItem {
-  id: string
-  repositoryId: string
-  serviceId: string
-  platformId: string
-}
-
-// These are the types that are returned to the frontend
-// We add _view to each one so the type never matches the
-// model type. Ex. User { id } UserView { id } would not
-// error if we returned an instance of the user because all
-// attributes exist. _view makes sure we see errors for this.
-// Its also potentially helpful for systems parsing the objects
-// to know with certaintly what the shape is.
-
 export type User = {
-  _view: 'exo.user',
+  _view: 'exo.user'
   id: string
-  did: string
   email: string
-  acl: UserAccessControlLevel
+  role: UserRole
   username: string
+  thumbnailUrl: string
+  workspaces: {
+    name: string
+    id: string
+  }[]
 }
 
-export interface DeploymentAttributes {
-  functions: ExobaseFunction[]
-  version: string
-  url: string
-  outputs: Record<string, string | number | boolean>
+export type Workspace = {
+  _view: 'exo.workspace'
+  id: string
+  subscription: any // stripe/paddle/chargebee
+  name: string
+  platforms: Platform[]
+  members: {
+    user: Pick<User, 'id' | 'username' | 'thumbnailUrl'>
+    role: MemberRole
+  }[]
 }
 
 export type Deployment = {
   _view: 'exo.deployment'
   id: string
+  workspaceId: string
+  platformId: string
+  unitId: string
+  logId: string
   type: 'create' | 'destroy'
-  platformId: string
-  serviceId: string
   startedAt: number
   finishedAt: number | null
   status: DeploymentStatus
-  ledger: DeploymentLedgerItem[]
-  logs: string
-  attributes: DeploymentAttributes | null
-  config: ServiceConfig
-  trigger: DeploymentTrigger
-}
-
-export interface BuildPack {
-  name: string
-  version: string | null
-}
-
-export interface DeploymentLogStreamChunk {
-  content: string
-  timestamp: number
-}
-
-export interface DeploymentLogStream {
-  chunks: DeploymentLogStreamChunk[]
-}
-
-export interface DeploymentTrigger {
-  type: 'user' | 'source'
-  user?: {
-    id: string
-    username: string
+  output: any
+  vars: any
+  trigger: {
+    type: 'user-ui' | 'user-cli' | 'github-push'
+    user: null | Pick<User, 'id' | 'username' | 'thumbnailUrl'>
+    git: null | {
+      commit: string
+      private: boolean
+      repoId: string
+      owner: string
+      repo: string
+      branch: string
+    }
   }
-  source?: ServiceSource
 }
 
-export type DomainDeployment = {
-  _view: 'exo.domain-deployment'
-  id: string
-  platformId: string
-  domainId: string
-  startedAt: number
-  finishedAt: number | null
-  status: DeploymentStatus
-  ledger: DeploymentLedgerItem[]
-  logs: string
-}
-
-export type ServiceDomainConfig = {
-  subdomain: string
-  domain: string
-  fqd: string
-}
-
-export interface ServiceSource {
-  installationId: string | null
-  private: boolean
-  repoId: string
-  owner: string
-  repo: string
-  branch: string
-  provider: 'github' | 'bitbucket' | 'gitlab'
-}
-
-export interface EnvironmentVariable {
-  name: string
-  value: string
-  isSecret: boolean
-}
-
-export type ServiceConfig = {
-  type: StackKey
-  environmentVariables: EnvironmentVariable[]
-  stack: AnyStackConfig
-}
-
-export type DeleteEvent = {
-  userId: string
-  timestamp: number
-  source: string
-}
-
-export type Service = {
-  _view: 'exo.service'
+export type Unit = {
+  _view: 'exo.unit'
   id: string
   name: string
   platformId: string
-  provider: CloudProvider
-  service: CloudService
-  type: ExobaseService
-  language: Language
-  source: ServiceSource
-  stack: StackKey
-  tags: string[]
+  workspaceId: string
+  type: 'user-service' | 'exo-domain'
+  tags: {
+    name: string
+    value: string
+  }[]
+  source: null | {
+    private: boolean
+    repoId: string
+    owner: string
+    repo: string
+    branch: string
+    provider: 'github'
+  }
   deployments: Deployment[]
-  latestDeploymentId: string | null
   latestDeployment: Deployment | null
-  activeDeploymentId: string | null
   activeDeployment: Deployment | null
-  config: ServiceConfig
-  domain: ServiceDomainConfig | null
   hasDeployedInfrastructure: boolean
   hasDeploymentInProgress: boolean
-  isDeleted: boolean
-  deleteEvent: DeleteEvent | null
+  domain: null | {
+    id: string
+    domain: string
+    subdomain: string
+    fqd: string
+  }
+  deleted: boolean
+  pack: BuildPackageRef
+  attributes: any
+  config: any
+  ledger: {
+    timestamp: number
+    event: 'unit-created' | 'unit-deployed' | 'unit-updated' | 'unit-config-updated' | 'unit-destroyed' | 'unit-deleted'
+    user: null | Pick<User, 'id' | 'username' | 'thumbnailUrl'>
+  }[]
   createdAt: number
-  buildPack: BuildPack
+  createdBy: Pick<User, 'id' | 'username' | 'thumbnailUrl'>
+}
+
+export type BuildPackage = {
+  _view: 'exo.pack'
+  id: string
+  name: string
+  repo: string
+  type: ExobaseService
+  provider: CloudProvider
+  service: CloudService | null
+  language: Language | null
+  owner: string
+  latest: string
+  versions: BuildPackageVersion[]
+  addedBy: Pick<User, 'id' | 'username' | 'thumbnailUrl'>
+  addedAt: number
+}
+
+export type BuildPackageRef = Omit<BuildPackage, 'versions' | '_view'> & {
+  _view: 'exo.pack-ref'
+  version: BuildPackageVersion
 }
 
 export type PlatformPreview = {
@@ -235,90 +141,100 @@ export type PlatformPreview = {
 export type Domain = {
   _view: 'exo.domain'
   id: string
+  workspaceId: string
   platformId: string
+  unitId: string
   domain: string
   provider: CloudProvider
-  latestDeploymentId: string | null
-  buildPack: BuildPack
+  status: 'error' | 'ready' | 'provisioning'
 }
 
 export type Platform = {
   _view: 'exo.platform'
   id: string
+  workspaceId: string
   name: string
-  services: Service[]
-  hasConnectedGithubApp: boolean
-  domains: Domain[]
+  units: Unit[]
   providers: {
     aws: {
-      accessKeyId: '***************' | null
-      accessKeySecret: '***************' | null
+      configured: boolean
       region: string
-      configured: boolean
+      domains: Domain[]
     }
-    gcp: GCPProviderConfig & {
+    gcp: {
       configured: boolean
-    }
-    vercel: VercelProviderConfig & {
-      configured: boolean
-    }
-    heroku: HerokuProviderConfig & {
-      configured: boolean
+      domains: Domain[]
     }
   }
-}
-
-export type ElevatedPlatform = Omit<Platform, '_view' | 'providers'> & {
-  _view: 'exo.platform.elevated'
-  providers: {
-    aws?: AWSProviderConfig
-    gcp?: GCPProviderConfig
-    vercel?: VercelProviderConfig
-    heroku?: HerokuProviderConfig
-  }
-}
-
-export type DomainDeploymentContext = {
-  _view: 'exo.domain-deployment.context'
-  platform: Omit<ElevatedPlatform, 'services'>
-  domain: Domain
-  deployment: DomainDeployment
+  sources: {
+    private: boolean
+    repoId: string
+    owner: string
+    repo: string
+    provider: 'github'
+  }[]
+  hasConnectedGithubApp: boolean
+  createdBy: Pick<User, 'id' | 'username' | 'thumbnailUrl'>
+  createdAt: number
 }
 
 export type DeploymentContext = {
   _view: 'exo.deployment.context'
-  platform: Omit<ElevatedPlatform, 'services'>
-  service: Service
+  workspace: Omit<Workspace, 'platforms'>
+  provider: AWSProvider | GCPProvider
+  platform: Omit<Platform, 'units'>
+  unit: Unit
+  config: any
+  pack: BuildPackageRef
   deployment: Deployment
 }
 
-
-export interface  StackConfig {
-  stack: StackKey
+export type AWSProvider = {
+  domains: Domain[]
+  auth: {
+    accessKeyId: string
+    accessKeySecret: string
+    region: string
+  }
 }
 
-export type AnyStackConfig = TaskRunnerAWSCodeBuildStackConfig
-  | ApiAWSLambdaStackConfig
-  | StaticWebsiteAWSS3StackConfig
-
-export interface TaskRunnerAWSCodeBuildStackConfig extends StackConfig {
-  stack: 'task-runner:aws:code-build'
-  buildTimeoutSeconds: number
-  useBridgeApi: boolean
-  dockerImage: string
-  buildCommand: string
-  bridgeApiKey?: string
+export type GCPProvider = {
+  domains: Domain[]
+  auth: {
+    jsonCredentials: string
+  }
 }
 
-export interface ApiAWSLambdaStackConfig extends StackConfig {
-  stack: 'api:aws:lambda'
-  timeout: number
-  memory: number
+export interface BuildPackageVersion {
+  version: string
+  source: string
+  publishedAt: number
+  manifest: BuildPackageManifest
+  readme: string
+  inputs: {
+    name: string
+    type: string
+    description: string
+    default: string
+    required: boolean
+  }[]
+  outputs: {
+    name: string
+    description: string
+  }[]
 }
 
-export interface StaticWebsiteAWSS3StackConfig extends StackConfig {
-  stack: 'static-website:aws:s3'
-  distDir: string
-  preBuildCommand: string
-  buildCommand: string
+export type BuildPackageManifest = {
+  type?: ExobaseService
+  service?: CloudService
+  language?: Language
+  inputs?: Record<
+    string,
+    {
+      type: 'string' | 'number' | 'envars'
+    }
+  >
+  build?: {
+    before?: string
+  }
 }

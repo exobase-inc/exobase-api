@@ -2,36 +2,53 @@ import _ from 'radash'
 import * as t from '../../core/types'
 import makeMongo, { MongoClient } from '../../core/db'
 import config from '../../core/config'
-
 import type { Props } from '@exobase/core'
 import { useCors, useService, useJsonArgs } from '@exobase/hooks'
 import { useLambda } from '@exobase/lambda'
 import { useTokenAuthentication } from '@exobase/auth'
-import { useMongoConnection } from '../../core/hooks/useMongoConnection'
-
 
 interface Args {
+  workspaceId: t.Id<'workspace'>
+  platformId: t.Id<'platform'>
   provider: t.CloudProvider
-  config: t.AWSProviderConfig | t.GCPProviderConfig | t.VercelProviderConfig
+  value: t.AWSProvider['auth'] | t.GCPProvider['auth']
 }
 
 interface Services {
   mongo: MongoClient
 }
 
-async function updateProviderConfig({ args, auth, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<void> {
+async function updateProviderConfig({
+  args,
+  auth,
+  services
+}: Props<Args, Services, t.PlatformTokenAuth>): Promise<void> {
   const { mongo } = services
-  const { platformId } = auth.token.extra
-  const { provider, config } = args
+  const { workspaceId } = auth.token.extra
 
-  const [err] = await mongo.updatePlatformConfig({
-    id: platformId,
-    provider,
-    config
+  const workspace = await mongo.findWorkspaceById(workspaceId)
+  const platform = workspace.platforms.find(p => p.id === args.platformId)
+
+  await mongo.updateWorkspace({
+    id: workspace.id,
+    workspace: {
+      ...workspace,
+      platforms: _.replace(
+        workspace.platforms,
+        {
+          ...platform,
+          providers: {
+            ...platform.providers,
+            [args.provider]: {
+              ...platform.providers[args.provider],
+              auth: args.value
+            }
+          }
+        },
+        p => p.id === args.platformId
+      )
+    }
   })
-  if (err) throw err
-
-  return
 }
 
 export default _.compose(
@@ -43,8 +60,10 @@ export default _.compose(
     tokenSignatureSecret: config.tokenSignatureSecret
   }),
   useJsonArgs<Args>(yup => ({
-    provider: yup.string().oneOf(['vercel', 'aws', 'gcp', 'heroku']).required(),
-    config: yup.object({
+    workspaceId: yup.string().required(),
+    platformId: yup.string().required(),
+    provider: yup.string().oneOf(['aws', 'gcp']).required(),
+    value: yup.object({
       accessKeyId: yup.string().when('provider', {
         is: 'aws',
         then: yup.string().required()
@@ -60,16 +79,11 @@ export default _.compose(
       jsonCredential: yup.string().when('provider', {
         is: 'gcp',
         then: yup.string().required()
-      }),
-      token: yup.string().when('provider', {
-        is: 'vercel',
-        then: yup.string().required()
       })
     })
   })),
   useService<Services>({
     mongo: makeMongo()
   }),
-  useMongoConnection(),
   updateProviderConfig
 )

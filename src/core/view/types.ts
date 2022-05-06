@@ -11,60 +11,117 @@ import * as t from '../model/types'
 export type UserView = {
   _view: 'exo.user',
   id: string
-  did: string
   email: string
-  acl: t.UserAccessControlLevel
+  role: t.UserRole
   username: string
+  thumbnailUrl: string
+  workspaces: {
+    name: string
+    id: string
+  }[]
+}
+
+export type WorkspaceView = {
+  _view: 'exo.workspace'
+  id: string
+  subscription: any // stripe/paddle/chargebee
+  name: string
+  platforms: PlatformView[]
+  members: {
+    user: Pick<UserView, 'id' | 'username' | 'thumbnailUrl'>
+    role: t.MemberRole
+  }[]
 }
 
 export type DeploymentView = {
   _view: 'exo.deployment'
   id: string
+  workspaceId: string
+  platformId: string
+  unitId: string
+  logId: string
   type: 'create' | 'destroy'
-  platformId: string
-  serviceId: string
   startedAt: number
   finishedAt: number | null
   status: t.DeploymentStatus
-  ledger: t.DeploymentLedgerItem[]
-  logs: string
-  attributes: t.DeploymentAttributes
-  config: t.ServiceConfig
-  trigger: t.DeploymentTrigger
+  output: any
+  vars: any
+  trigger: {
+    type: 'user-ui' | 'user-cli' | 'github-push'
+    user: null | Pick<UserView, 'id' | 'username' | 'thumbnailUrl'>
+    git: null | {
+      commit: string
+      private: boolean
+      repoId: string
+      owner: string
+      repo: string
+      branch: string
+    }
+  }
 }
 
-export type DomainDeploymentView = {
-  _view: 'exo.domain-deployment'
-  id: string
-  platformId: string
-  domainId: string
-  startedAt: number
-  finishedAt: number | null
-  status: t.DeploymentStatus
-  ledger: t.DeploymentLedgerItem[]
-  logs: string
-}
-
-export type ServiceView = {
-  _view: 'exo.service'
+export type UnitView = {
+  _view: 'exo.unit'
   id: string
   name: string
-  tags: string[]
   platformId: string
-  stackName: string
-  source: t.ServiceSource
+  workspaceId: string
+  type: 'user-service' | 'exo-domain'
+  tags: {
+    name: string
+    value: string
+  }[]
+  source: null | {
+    private: boolean
+    repoId: string
+    owner: string
+    repo: string
+    branch: string
+    provider: 'github'
+  }
   deployments: DeploymentView[]
-  latestDeploymentId: string | null
   latestDeployment: DeploymentView | null
-  activeDeploymentId: string | null
   activeDeployment: DeploymentView | null
-  domain: t.ServiceDomainConfig | null
   hasDeployedInfrastructure: boolean
   hasDeploymentInProgress: boolean
-  isDeleted: boolean
-  deleteEvent: t.DeleteEvent | null
+  domain: null | {
+    id: string
+    domain: string
+    subdomain: string
+    fqd: string
+  }
+  deleted: boolean
+  pack: BuildPackageRefView
+  attributes: any
+  config: any
+  ledger: {
+    timestamp: number
+    event: 'unit-created' | 'unit-deployed' | 'unit-updated' | 'unit-config-updated' | 'unit-destroyed' | 'unit-deleted'
+    user: null | Pick<UserView, 'id' | 'username' | 'thumbnailUrl'>
+  }[]
   createdAt: number
-  pack: t.BuildPackageRef
+  createdBy: Pick<UserView, 'id' | 'username' | 'thumbnailUrl'>
+}
+
+export type BuildPackageView = {
+  _view: 'exo.pack'
+  id: string
+  name: string
+  repo: string
+  type: t.ExobaseService
+  provider: t.CloudProvider
+  service: t.CloudService | null
+  language: t.Language | null
+  owner: string
+  latest: string
+  versions: t.BuildPackageVersion[]
+  addedBy: Pick<UserView, 'id' | 'username' | 'thumbnailUrl'>
+  addedAt: number
+}
+
+export type BuildPackageRefView = Omit<BuildPackageView, 'versions' | '_view'> & {
+  _view: 'exo.pack-ref'
+  version: t.BuildPackageVersion
 }
 
 export type PlatformPreviewView = {
@@ -76,59 +133,50 @@ export type PlatformPreviewView = {
 export type DomainView = {
   _view: 'exo.domain'
   id: string
+  workspaceId: string
   platformId: string
+  unitId: string
   domain: string
   provider: t.CloudProvider
-  latestDeploymentId: string | null
-  pack: t.BuildPackageRef
+  status: 'error' | 'ready' | 'provisioning'
 }
 
 export type PlatformView = {
   _view: 'exo.platform'
   id: string
+  workspaceId: string
   name: string
-  services: ServiceView[]
+  units: UnitView[]
   providers: {
     aws: {
-      accessKeyId: '***************' | null
-      accessKeySecret: '***************' | null
+      configured: boolean
       region: string
-      configured: boolean
+      domains: DomainView[]
     }
-    gcp: t.GCPProviderConfig & {
+    gcp: {
       configured: boolean
-    }
-    vercel: t.VercelProviderConfig & {
-      configured: boolean
-    }
-    heroku: t.HerokuProviderConfig & {
-      configured: boolean
+      domains: DomainView[]
     }
   },
-  domains: DomainView[],
+  sources: {
+    private: boolean
+    repoId: string
+    owner: string
+    repo: string
+    provider: 'github'
+  }[]
   hasConnectedGithubApp: boolean
-}
-
-export type ElevatedPlatformView = Omit<PlatformView, '_view' | 'providers'> & {
-  _view: 'exo.platform.elevated'
-  providers: {
-    aws?: t.AWSProviderConfig
-    gcp?: t.GCPProviderConfig
-    vercel?: t.VercelProviderConfig
-    heroku?: t.HerokuProviderConfig
-  }
-}
-
-export type DomainDeploymentContextView = {
-  _view: 'exo.domain-deployment.context'
-  platform: Omit<ElevatedPlatformView, 'services'>
-  domain: DomainView
-  deployment: DomainDeploymentView
+  createdBy: Pick<UserView, 'id' | 'username' | 'thumbnailUrl'>
+  createdAt: number
 }
 
 export type DeploymentContextView = {
   _view: 'exo.deployment.context'
-  platform: Omit<ElevatedPlatformView, 'services'>
-  service: ServiceView
+  workspace: Omit<WorkspaceView, 'platforms'>
+  provider: t.AWSProvider | t.GCPProvider
+  platform: Omit<PlatformView, 'units'>
+  unit: UnitView
+  config: any
+  pack: BuildPackageRefView
   deployment: DeploymentView
 }

@@ -1,27 +1,21 @@
-export type Collection = 'platforms' 
-    | 'membership' 
+export type Collection = 'workspaces' 
     | 'users' 
-    | 'deployments' 
-    | 'repository_lookup'
+    | 'logs' 
     | 'migrations'
     | 'registry'
 
 export const COLLECTIONS: Record<Collection, true> = {
-    deployments: true,
-    membership: true,
+    logs: true,
     migrations: true,
-    platforms: true,
-    repository_lookup: true,
+    workspaces: true,
     users: true,
     registry: true
 }
 
 export const CURRENT_VERSIONS: Record<Collection, number> = {
-    deployments: 0,
-    membership: 0,
+    logs: 0,
     migrations: 0,
-    platforms: 1,
-    repository_lookup: 0,
+    workspaces: 0,
     users: 0,
     registry: 0
 }

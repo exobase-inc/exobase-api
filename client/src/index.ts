@@ -9,127 +9,97 @@ const createApi = (url: string) => {
   const endpoint = api(url)
   return {
     auth: {
-      login: endpoint<{}, {
+      login: endpoint<{
+        email: string
+        password: string
+      }, {
         user: t.User
-        platforms: t.PlatformPreview[]
-        platformId: string
+        workspace: t.Workspace
         idToken: string
         exp: number
       }>({
         module: 'auth',
         function: 'login'
       }),
-      switchPlatform: endpoint<{
-        platformId: string
+      signup: endpoint<{
+        email: string
+        password: string
       }, {
         user: t.User
-        platforms: t.PlatformPreview[]
-        platformId: string
+        workspace: t.Workspace
         idToken: string
         exp: number
       }>({
         module: 'auth',
-        function: 'switchPlatform'
+        function: 'signup'
+      }),
+      refresh: endpoint<{}, {
+        user: t.User
+        workspace: t.Workspace
+        idToken: string
+        exp: number
+      }>({
+        module: 'auth',
+        function: 'refresh'
+      }),
+      switchWorkspaces: endpoint<{
+        workspaceId: string
+      }, {
+        user: t.User
+        workspace: t.Workspace
+        idToken: string
+        exp: number
+      }>({
+        module: 'auth',
+        function: 'switch-workspaces'
+      }),
+    },
+    workspaces: {
+      find: endpoint<{
+        workspaceId: string
+      }, {
+        workspace: t.Workspace
+      }>({
+        module: 'workspaces',
+        function: 'find'
       }),
     },
     deployments: {
       getContext: endpoint<{
+        workspaceId: string
+        platformId: string
+        unitId: string
         deploymentId: string
       }, {
         context: t.DeploymentContext
       }>({
         module: 'deployments',
-        function: 'getContext'
+        function: 'get-context'
       }),
-      listForService: endpoint<{
-        serviceId: string
-      }, {
-        deployments: t.Deployment[]
-      }>({
-        module: 'deployments',
-        function: 'listForService'
-      }),
-      appendLogChunk: endpoint<{
+      recordOutput: endpoint<{
+        workspaceId: string
+        platformId: string
+        unitId: string
         deploymentId: string
-        chunk: t.DeploymentLogStreamChunk
+        output: any
       }, {}>({
         module: 'deployments',
-        function: 'appendLogChunk'
-      }),
-      getLogStream: endpoint<{
-        deploymentId: string
-      }, {
-        logStream: t.DeploymentLogStream
-      }>({
-        module: 'deployments',
-        function: 'getLogStream'
+        function: 'record-output'
       }),
       updateStatus: endpoint<{
+        workspaceId: string
+        platformId: string
+        unitId: string
         deploymentId: string
         status: t.DeploymentStatus
-        source: string
       }, {}>({
         module: 'deployments',
-        function: 'updateStatus'
-      }),
-      updateAttributes: endpoint<{
-        deploymentId: string
-        attributes: t.DeploymentAttributes
-      }, {}>({
-        module: 'deployments',
-        function: 'updateAttributes'
-      })
-    },
-    domainDeployments: {
-      getContext: endpoint<{
-        deploymentId: string
-      }, {
-        context: t.DomainDeploymentContext
-      }>({
-        module: 'domain-deployments',
-        function: 'getContext'
-      }),
-      getLatest: endpoint<{}, {
-        deployments: t.DomainDeployment[]
-      }>({
-        module: 'domain-deployments',
-        function: 'getLatest'
-      })
-    },
-    domains: {
-      add: endpoint<{
-        domain: string
-        provider: t.CloudProvider
-      }, {
-        deployment: t.DomainDeployment
-        domain: t.Domain
-      }>({
-        module: 'domains',
-        function: 'add'
-      }),
-      deploy: endpoint<{
-        platformId: string
-        domainId: string
-      }, {
-        deployment: t.DomainDeployment
-        domain: t.Domain
-      }>({
-        module: 'domains',
-        function: 'deploy'
-      }),
-      setBuildPackVersion: endpoint<{
-        platformId: string
-        domainId: string
-        version: string
-      }, {
-        domain: t.Domain
-      }>({
-        module: 'domains',
-        function: 'setBuildPackVersion'
+        function: 'update-status'
       }),
     },
     platforms: {
       create: endpoint<{
+        workspaceId: string
         name: string
       }, {
         platform: t.Platform
@@ -137,34 +107,172 @@ const createApi = (url: string) => {
         module: 'platforms',
         function: 'create'
       }),
-      getById: endpoint<{
-        id: string
+      addDomain: endpoint<{
+        workspaceId: string
+        platformId: string
+        domain: string
+        provider: t.CloudProvider
+      }, {
+        domain: t.Domain
+      }>({
+        module: 'platforms',
+        function: 'add-domain'
+      }),
+      find: endpoint<{
+        workspaceId: string
+        platformId: string
       }, {
         platform: t.Platform
       }>({
         module: 'platforms',
-        function: 'getById'
-      }),
-      listForUser: endpoint<{}, {
-        platforms: t.Platform[]
-      }>({
-        module: 'platforms',
-        function: 'listForUser'
+        function: 'find'
       }),
       updateProvider: endpoint<{
+        workspaceId: string
+        platformId: string
         provider: t.CloudProvider
-        config: t.AWSProviderConfig | t.GCPProviderConfig | t.VercelProviderConfig
+        value: t.AWSProvider['auth'] | t.GCPProvider['auth']
       }, {}>({
         module: 'platforms',
-        function: 'updateProvider'
+        function: 'update-provider'
+      })
+    },
+    units: {
+      create: endpoint<{
+        name: string
+        platformId: string
+        workspaceId: string
+        tags: {
+          name: string
+          value: string
+        }[]
+        packId: string
+        packConfig: any
+        source: null | {
+          installationId: string | null
+          private: boolean
+          repoId: string
+          owner: string
+          repo: string
+          branch: string
+          provider: 'github'
+        }
+        domainId: null | string
+        subdomain: null | string
+      }, {
+        unit: t.Unit
+      }>({
+        module: 'units',
+        function: 'create'
       }),
-      setGithubInstallationId: endpoint<{
+      deployFromCLI: endpoint<{
+        unitId: string
+        platformId: string
+        workspaceId: string
+      }, {
+        deploy: t.Deployment
+      }>({
+        module: 'units',
+        function: 'deploy-via-cli'
+      }),
+      deployFromUI: endpoint<{
+        unitId: string
+        platformId: string
+        workspaceId: string
+      }, {
+        deploy: t.Deployment
+      }>({
+        module: 'units',
+        function: 'deploy-via-ui'
+      }),
+      destroy: endpoint<{
+        unitId: string
+        platformId: string
+        workspaceId: string
+      }, {
+        deployment: t.Deployment
+      }>({
+        module: 'units',
+        function: 'destroy'
+      }),
+      getSourceDownloadLink: endpoint<{
+        workspaceId: string
+        platformId: string
+        unitId: string
+        deploymentId: string
+      }, {
+        url: string
+      }>({
+        module: 'units',
+        function: 'get-source-download-link'
+      }),
+      remove: endpoint<{
+        unitId: string
+        workspaceId: string
+        platformId: string
+      }, {}>({
+        module: 'units',
+        function: 'remove'
+      }),
+      update: endpoint<{
+        workspaceId: string
+        platformId: string
+        unitId: string
+        name?: string
+        tags?: {
+          name: string
+          value: string
+        }[]
+        config?: any
+        source?: {
+          installationId: string | null
+          private: boolean
+          repoId: string
+          owner: string
+          repo: string
+          branch: string
+          provider: 'github'
+        }
+      }, {
+        unit: t.Unit
+      }>({
+        module: 'units',
+        function: 'update'
+      })
+    },
+    registry: {
+      add: endpoint<{
+        url: string
+      }, {
+        pack: t.BuildPackage
+      }>({
+        module: 'registry',
+        function: 'add'
+      }),
+      search: endpoint<{
+        provider?: t.CloudProvider
+        type?: t.ExobaseService
+        service?: t.CloudService
+        language?: t.Language
+      }, {
+        packs: t.BuildPackage[]
+      }>({
+        module: 'registry',
+        function: 'search'
+      }),
+    },
+    source: {
+      addInstallation: endpoint<{
+        workspaceId: string
+        platformId: string
         installationId: string
       }, {}>({
-        module: 'platforms',
-        function: 'setGithubInstallationId'
+        module: 'source',
+        function: 'add-installation'
       }),
-      listAvailableBranches: endpoint<{
+      listBranches: endpoint<{
+        workspaceId: string
+        platformId: string
         owner: string
         repo: string
         installationId: string | null
@@ -173,10 +281,13 @@ const createApi = (url: string) => {
           name: string
         }[]
       }>({
-        module: 'platforms',
-        function: 'listAvailableBranches'
+        module: 'source',
+        function: 'add-branches'
       }),
-      listAvailableRepositories: endpoint<{}, {
+      listRepos: endpoint<{
+        workspaceId: string
+        platformId: string
+      }, {
         repositories: {
           installationId: string
           id: string
@@ -184,115 +295,31 @@ const createApi = (url: string) => {
           owner: string
         }[]
       }>({
-        module: 'platforms',
-        function: 'listAvailableRepositories'
-      })
+        module: 'source',
+        function: 'add-repos'
+      }),
     },
-    services: {
-      create: endpoint<{
-        name: string
-        tags: string[]
-        type: t.ExobaseService
-        provider: t.CloudProvider
-        service: t.CloudService
-        language: t.Language
-        config: t.ServiceConfig
-        source: t.ServiceSource
-        domain: {
-          domain: string
-          subdomain: string
-        } | null
-      }, {
-        service: t.Service
-      }>({
-        module: 'services',
-        function: 'create'
-      }),
-      update: endpoint<{
-        id: string
-        name?: string
-        tags?: string[]
-        type?: t.ExobaseService
-        provider?: t.CloudProvider
-        service?: t.CloudService
-        language?: t.Language
-        config?: t.ServiceConfig
-        source?: t.ServiceSource
-      }, {
-        service: t.Service
-      }>({
-        module: 'services',
-        function: 'update'
-      }),
-      updateConfig: endpoint<{
-        serviceId: string
-        config: t.ServiceConfig
-      }, {
-        service: t.Service
-      }>({
-        module: 'services',
-        function: 'updateConfig'
-      }),
-      deploy: endpoint<{
-        serviceId: string
-      }, {
-        deployment: t.Deployment
-      }>({
-        module: 'services',
-        function: 'deploy'
-      }),
-      destroy: endpoint<{
-        serviceId: string
-      }, {
-        deployment: t.Deployment
-      }>({
-        module: 'services',
-        function: 'destroy'
-      }),
-      remove: endpoint<{
-        serviceId: string
+    logs: {
+      appendChunk: endpoint<{
+        logId: string
+        timestamp: number
+        content: string
       }, {}>({
-        module: 'services',
-        function: 'remove'
+        module: 'logs',
+        function: 'append-chunk'
       }),
-      listByRepositoryId: endpoint<{
-        repositoryId: string
+      pull: endpoint<{
+        logId: string
       }, {
-        services: t.Service[]
+        stream: {
+          timestamp: number
+          content: string
+        }[]
       }>({
-        module: 'services',
-        function: 'listByRepositoryId'
+        module: 'logs',
+        function: 'pull'
       }),
-      automatedDeploy: endpoint<{
-        serviceId: string
-        platformId: string
-      }, {
-        deployment: t.Deployment
-      }>({
-        module: 'services',
-        function: 'automatedDeploy'
-      }),
-      getSourceDownloadLink: endpoint<{
-        serviceId: string
-        platformId: string
-        deploymentId: string
-      }, {
-        url: string
-      }>({
-        module: 'services',
-        function: 'getSourceDownloadLink'
-      }),
-      setBuildPackVersion: endpoint<{
-        platformId: string
-        serviceId: string
-        version: string
-      }, {
-        service: t.Service
-      }>({
-        module: 'services',
-        function: 'setBuildPackVersion'
-      })
-    },
+    }
   }
 }
 

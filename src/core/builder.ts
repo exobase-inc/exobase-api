@@ -8,8 +8,11 @@ const api = {
   trigger: {
     build: endpoint<{
       args: {
-        action: 'deploy-domain' | 'deploy-stack' | 'destroy-stack'
         deploymentId: string
+        workspaceId: string
+        platformId: string
+        unitId: string
+        logId: string
       }
     }, void>({
       module: 'trigger',

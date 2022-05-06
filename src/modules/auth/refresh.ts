@@ -7,11 +7,10 @@ import { errors, Props } from '@exobase/core'
 import { useCors, useJsonArgs, useService } from '@exobase/hooks'
 import { useLambda } from '@exobase/lambda'
 import { comparePasswordToHash, createToken } from '../../core/auth'
+import { useTokenAuth } from '../../core/hooks/useTokenAuth'
+import { TokenAuth } from '@exobase/auth'
 
-interface Args {
-  email: string
-  password: string
-}
+interface Args {}
 
 interface Services {
   mongo: MongoClient
@@ -24,28 +23,19 @@ interface Response {
   exp: number
 }
 
-async function loginOrCreateUser({ args, services }: Props<Args, Services>): Promise<Response> {
+async function loginOrCreateUser({ services, auth }: Props<Args, Services, TokenAuth>): Promise<Response> {
   const { mongo } = services
+  const userId = auth.token.sub as t.Id<'user'>
 
-  const user = await mongo.findUserByEmail({ email: args.email })
+  const user = await mongo.findUserId({ userId })
   if (!user) {
     throw errors.badRequest({
       details: 'Provided credentials did not match any users',
-      key: 'exo.err.auth.login.obscured'
+      key: 'exo.err.auth.refresh.obscured'
     })
   }
 
-  const [hashError, isMatch] = await comparePasswordToHash(args.password, user._passwordHash)
-
-  if (hashError || !isMatch) {
-    if (hashError) console.error(hashError)
-    throw errors.badRequest({
-      details: 'Provided credentials did not match any users',
-      key: 'exo.err.auth.login.obscured'
-    })
-  }
-
-  const workspaces = await mongo.findWorkspacesForUser({ userId: user.id })
+  const workspaces = await mongo.findWorkspacesForUser({ userId })
   const firstWorkspace = _.first(workspaces)
 
   return {
@@ -66,10 +56,7 @@ async function loginOrCreateUser({ args, services }: Props<Args, Services>): Pro
 export default _.compose(
   useLambda(),
   useCors(),
-  useJsonArgs(yup => ({
-    email: yup.string().email().required(),
-    password: yup.string().required()
-  })),
+  useTokenAuth(),
   useService<Services>({
     mongo: makeMongo()
   }),

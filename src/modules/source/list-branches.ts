@@ -3,15 +3,14 @@ import * as t from '../../core/types'
 import makeMongo, { MongoClient } from '../../core/db'
 import makeGithub, { GithubApiMaker } from '../../core/github'
 import config from '../../core/config'
-
 import { errors, Props } from '@exobase/core'
 import { useCors, useJsonArgs, useService } from '@exobase/hooks'
 import { useLambda } from '@exobase/lambda'
 import { useTokenAuthentication } from '@exobase/auth'
-import { useMongoConnection } from '../../core/hooks/useMongoConnection'
-
 
 interface Args {
+  workspaceId: t.Id<'workspace'>
+  platformId: t.Id<'platform'>
   owner: string
   repo: string
   installationId: string | null
@@ -28,16 +27,19 @@ interface Response {
   }[]
 }
 
-async function listAvailableBranches({ args, auth, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<Response> {
+async function listAvailableBranches({
+  args,
+  auth,
+  services
+}: Props<Args, Services, t.PlatformTokenAuth>): Promise<Response> {
   const { mongo, github } = services
-  const { platformId } = auth.token.extra
-  const { owner, repo, installationId } = args
+  const { workspaceId } = auth.token.extra
 
-  const [err, platform] = await mongo.findPlatformById({ id: platformId })
-  if (err) throw err
+  const workspace = await mongo.findWorkspaceById(workspaceId)
+  const platform = workspace.platforms.find(p => p.id === args.platformId)
 
-  if (installationId) {
-    const installation = platform._githubInstallations.find(x => x.id === installationId)
+  if (args.installationId) {
+    const installation = platform.sources.find(s => s._installationId === args.installationId)
     if (!installation) {
       throw errors.badRequest({
         details: 'The Exobase Bot github app has not been installed and connected to the current platform',
@@ -46,11 +48,10 @@ async function listAvailableBranches({ args, auth, services }: Props<Args, Servi
     }
   }
 
-  const [gerr, { branches }] = await _.try(github(installationId).listAvailableBranches)({
-    owner,
-    repo
+  const { branches } = await github(args.installationId).listAvailableBranches({
+    owner: args.owner,
+    repo: args.repo
   })
-  if (gerr) throw gerr
 
   return {
     branches
@@ -61,6 +62,8 @@ export default _.compose(
   useLambda(),
   useCors(),
   useJsonArgs(yup => ({
+    workspaceId: yup.string().required(),
+    platformId: yup.string().required(),
     installationId: yup.string().nullable(),
     owner: yup.string().required(),
     repo: yup.string().required()
@@ -74,6 +77,6 @@ export default _.compose(
     mongo: makeMongo(),
     github: makeGithub
   }),
-  useMongoConnection(),
+
   listAvailableBranches
 )

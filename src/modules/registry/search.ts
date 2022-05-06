@@ -1,12 +1,10 @@
 import _ from 'radash'
 import * as t from '../../core/types'
 import makeMongo, { MongoClient } from '../../core/db'
-import config from '../../core/config'
 import { errors, Props } from '@exobase/core'
 import { useCors, useService, useJsonArgs } from '@exobase/hooks'
 import { useLambda } from '@exobase/lambda'
-import { useTokenAuthentication } from '@exobase/auth'
-
+import mappers from '../../core/view/mappers'
 
 interface Args {
   provider?: t.CloudProvider
@@ -20,36 +18,23 @@ interface Services {
 }
 
 interface Response {
-  packs: t.BuildPackage[]
+  packs: t.BuildPackageView[]
 }
 
 async function searchBuildPackages({ args, services }: Props<Args, Services>): Promise<Response> {
   const { mongo } = services
 
-  if (Object.keys(args).length === 0) {
-    throw errors.badRequest({
-      details: 'Cannot search registry with no search arguments',
-      key: 'exo.err.registry.search.no-arguments'
-    })
-  }
-
   // TODO: Consider paginating
-  const [err, packs] = await mongo.searchRegistry(args)
-  if (err) throw err
+  const packs = await mongo.searchRegistry(args)
 
   return {
-    packs
+    packs: packs.map(mappers.BuildPackageView.toView)
   }
 }
 
 export default _.compose(
   useLambda(),
   useCors(),
-  useTokenAuthentication({
-    type: 'id',
-    iss: 'exo.api',
-    tokenSignatureSecret: config.tokenSignatureSecret
-  }),
   useJsonArgs<Args>(yup => ({
     provider: yup.string().optional(),
     type: yup.string().optional(),
@@ -57,7 +42,7 @@ export default _.compose(
     language: yup.string().optional()
   })),
   useService<Services>({
-    mongo: makeMongo(),
+    mongo: makeMongo()
   }),
   searchBuildPackages
 )

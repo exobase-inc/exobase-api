@@ -9,10 +9,9 @@ import type { Props } from '@exobase/core'
 import { useCors, useService, useJsonArgs } from '@exobase/hooks'
 import { useLambda } from '@exobase/lambda'
 import { useTokenAuthentication } from '@exobase/auth'
-import { useMongoConnection } from '../../core/hooks/useMongoConnection'
-
 
 interface Args {
+  workspaceId: t.Id<'workspace'>
   name: string
 }
 
@@ -26,35 +25,44 @@ interface Response {
 
 async function createPlatform({ services, args, auth }: Props<Args, Services, t.PlatformTokenAuth>): Promise<Response> {
   const { mongo } = services
-  const { sub: userId } = auth.token
+  const userId = auth.token.sub as t.Id<'user'>
+  const { workspaceId, username, thumbnailUrl } = auth.token.extra
 
-  const platformId = model.createId('platform')
-  const membershipId = model.createId('membership')
+  const workspace = await mongo.findWorkspaceById(workspaceId)
 
-  const membership: t.Membership = {
-    id: membershipId,
-    userId,
-    platformId,
-    acl: 'owner'
-  }
+  const platformId = model.id('platform')
   const platform: t.Platform = {
     id: platformId,
+    workspaceId,
+    workspace: {
+      id: workspace.id,
+      name: workspace.name
+    },
     name: args.name,
-    membership: [membership],
-    services: [],
-    providers: {},
-    domains: [],
-    _githubInstallations: []
+    units: [],
+    providers: {
+      aws: null,
+      gcp: null
+    },
+    sources: [],
+    createdBy: {
+      id: userId,
+      username,
+      thumbnailUrl
+    },
+    createdAt: Date.now()
   }
 
-  const [merr] = await mongo.addMembership(membership)
-  if (merr) throw merr
-
-  const [perr] = await mongo.addPlatform(platform)
-  if (perr) throw perr
+  await mongo.updateWorkspace({
+    id: workspace.id,
+    workspace: {
+      ...workspace,
+      platforms: [...workspace.platforms, platform]
+    }
+  })
 
   return {
-    platform: mappers.PlatformView.fromPlatform(platform)
+    platform: mappers.PlatformView.toView(platform)
   }
 }
 
@@ -62,6 +70,7 @@ export default _.compose(
   useLambda(),
   useCors(),
   useJsonArgs<Args>(yup => ({
+    workspaceId: yup.string().required(),
     name: yup.string().required()
   })),
   useTokenAuthentication({
@@ -72,6 +81,5 @@ export default _.compose(
   useService<Services>({
     mongo: makeMongo()
   }),
-  useMongoConnection(),
   createPlatform
 )

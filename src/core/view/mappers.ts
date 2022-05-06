@@ -2,105 +2,117 @@ import * as t from '../types'
 import _ from 'radash'
 
 export class UserView {
-  static fromUser(user: t.User): t.UserView {
+  static toView(user: t.User, workspaces: t.Workspace[]): t.UserView {
     return {
       _view: 'exo.user',
       id: user.id,
-      did: user.did,
       email: user.email,
-      acl: user.acl,
-      username: user.username
+      role: user.role,
+      username: user.username,
+      thumbnailUrl: user.thumbnailUrl,
+      workspaces: workspaces.map(w => ({
+        name: w.name,
+        id: w.id
+      }))
     }
   }
 }
 
-export class PlatformPreviewView {
-  static fromPlatform(platform: t.Platform): t.PlatformPreviewView {
+export class WorkspaceView {
+  static toView(workspace: t.Workspace): t.WorkspaceView {
     return {
-      _view: 'exo.platform-preview',
-      id: platform.id,
-      name: platform.name
+      _view: 'exo.workspace',
+      id: workspace.id,
+      subscription: workspace.subscription,
+      name: workspace.name,
+      platforms: workspace.platforms.map(PlatformView.toView),
+      members: workspace.members.map(m => ({
+        user: m.user,
+        role: m.role
+      }))
     }
   }
 }
 
 export class DomainView {
-  static fromDomain(domain: t.Domain): t.DomainView {
+  static toView(domain: t.Domain): t.DomainView {
     return {
       _view: 'exo.domain',
       id: domain.id,
+      workspaceId: domain.workspaceId,
       platformId: domain.platformId,
+      unitId: domain.unitId,
       domain: domain.domain,
       provider: domain.provider,
-      latestDeploymentId: domain.latestDeploymentId,
-      pack: domain.pack
+      status: domain.status
     }
   }
 }
 
 export class PlatformView {
-  static fromPlatform(platform: t.Platform): t.PlatformView {
+  static toView(platform: t.Platform): t.PlatformView {
     return {
       _view: 'exo.platform',
       id: platform.id,
+      workspaceId: platform.workspaceId,
       name: platform.name,
-      services: (platform.services ?? []).filter(s => !s.isDeleted).map(ServiceView.fromService),
+      units: platform.units.filter(u => !u.deleted).map(UnitView.toView),
       providers: {
         aws: {
-          accessKeyId: platform.providers.aws?.accessKeyId ? '***************' : null,
-          accessKeySecret: platform.providers.aws?.accessKeySecret ? '***************' : null,
-          region: platform.providers.aws?.region,
-          configured: !!platform.providers.aws
+          region: platform.providers.aws.auth?.region,
+          configured: (
+            !!platform.providers.aws.auth?.accessKeyId &&
+            !!platform.providers.aws.auth?.accessKeySecret &&
+            !!platform.providers.aws.auth?.region
+          ),
+          domains: platform.providers.aws.domains.map(DomainView.toView)
         },
         gcp: {
-          jsonCredentials: platform.providers.gcp?.jsonCredentials ? '***********' : null,
-          configured: !!platform.providers.gcp
-        },
-        vercel: {
-          token: platform.providers.vercel?.token ? '***********' : null,
-          configured: !!platform.providers.vercel
-        },
-        heroku: {
-          configured: false
+          configured: !!platform.providers.gcp.auth?.jsonCredentials,
+          domains: platform.providers.gcp.domains.map(DomainView.toView)
         }
       },
-      domains: platform.domains.map(DomainView.fromDomain),
-      hasConnectedGithubApp: platform._githubInstallations.length > 0
+      sources: platform.sources.map(s => ({
+        private: s.private,
+        repoId: s.repoId,
+        repo: s.repo,
+        owner: s.owner,
+        provider: 'github'
+      })),
+      hasConnectedGithubApp: platform.sources.length > 0,
+      createdAt: platform.createdAt,
+      createdBy: platform.createdBy
     }
   }
 }
 
-export class ElevatedPlatformView {
-  static fromPlatform(platform: t.Platform): t.ElevatedPlatformView {
-    return {
-      ...PlatformView.fromPlatform(platform),
-      _view: 'exo.platform.elevated',
-      providers: platform.providers
-    }
-  }
-}
-
-export class ServiceView {
-  static fromService(service: t.Service): t.ServiceView {
-    const latestDeployment = service.latestDeployment
-      ? DeploymentView.fromDeployment(service.latestDeployment)
+export class UnitView {
+  static toView(unit: t.Unit): t.UnitView {
+    const latestDeployment = unit.latestDeployment
+      ? DeploymentView.toView(unit.latestDeployment)
       : null
-    const activeDeployment = service.activeDeployment
-      ? DeploymentView.fromDeployment(service.activeDeployment)
+    const activeDeployment = unit.activeDeployment
+      ? DeploymentView.toView(unit.activeDeployment)
       : null
     const inProgressStatuses: t.DeploymentStatus[] = ['in_progress', 'queued']
     const hasDeploymentInProgress = inProgressStatuses.includes(latestDeployment?.status)
     return {
-      _view: 'exo.service',
-      id: service.id,
-      name: service.name,
-      platformId: service.platformId,
-      stackName: service.stackName,
-      source: service.source,
-      tags: service.tags,
-      deployments: (service.deployments ?? []).map(DeploymentView.fromDeployment),
-      latestDeploymentId: service.latestDeployment?.id ?? null,
-      activeDeploymentId: service.activeDeployment?.id ?? null,
+      _view: 'exo.unit',
+      id: unit.id,
+      name: unit.name,
+      type: unit.type,
+      platformId: unit.platformId,
+      workspaceId: unit.workspaceId,
+      source: unit.source ? {
+        private: unit.source.private,
+        repoId: unit.source.repoId,
+        owner: unit.source.owner,
+        repo: unit.source.repo,
+        branch: unit.source.branch,
+        provider: unit.source.provider
+      } : null,
+      tags: unit.tags,
+      deployments: (unit.deployments ?? []).map(DeploymentView.toView),
       latestDeployment,
       activeDeployment,
       hasDeploymentInProgress,
@@ -126,130 +138,125 @@ export class ServiceView {
         }
         return false
       })(),
-      domain: service.domain,
-      isDeleted: service.isDeleted,
-      deleteEvent: service.deleteEvent,
-      createdAt: service.createdAt,
-      pack: service.pack
+      domain: unit.domain ? {
+        id: unit.domain.id,
+        domain: unit.domain.domain,
+        subdomain: unit.domain.subdomain,
+        fqd: unit.domain.fqd
+      } : null,
+      attributes: unit.attributes,
+      config: unit.config,
+      ledger: (() => {
+        if (unit.ledger.length > 20) return unit.ledger.slice(0, 20)
+        return unit.ledger
+      })(),
+      deleted: unit.deleted,
+      createdAt: unit.createdAt,
+      createdBy: unit.createdBy,
+      pack: BuildPackageRefView.toView(unit.pack)
+    }
+  }
+}
+
+export class BuildPackageView {
+  static toView(pack: t.BuildPackage): t.BuildPackageView {
+    return {
+      _view: 'exo.pack',
+      id: pack.id,
+      name: pack.name,
+      repo: pack.repo,
+      type: pack.type,
+      provider: pack.provider,
+      service: pack.service,
+      language: pack.language,
+      owner: pack.owner,
+      latest: pack.latest,
+      versions: pack.versions,
+      addedBy: pack.addedBy,
+      addedAt: pack.addedAt
+    }
+  }
+}
+export class BuildPackageRefView {
+  static toView(pack: t.BuildPackageRef): t.BuildPackageRefView {
+    return {
+      _view: 'exo.pack-ref',
+      id: pack.id,
+      name: pack.name,
+      repo: pack.repo,
+      type: pack.type,
+      provider: pack.provider,
+      service: pack.service,
+      language: pack.language,
+      owner: pack.owner,
+      latest: pack.latest,
+      addedBy: pack.addedBy,
+      addedAt: pack.addedAt,
+      version: pack.version
     }
   }
 }
 
 export class DeploymentView {
-  static fromDeployment(deployment: t.Deployment): t.DeploymentView {
+  static toView(deployment: t.Deployment): t.DeploymentView {
     return {
       _view: 'exo.deployment',
       id: deployment.id,
-      type: deployment.type,
+      workspaceId: deployment.workspaceId,
       platformId: deployment.platformId,
-      serviceId: deployment.serviceId,
-      startedAt: deployment.ledger.find(l => l.status === 'queued')?.timestamp ?? null,
-      finishedAt: (() => {
-        const finishingStatusLedgerEntries = deployment.ledger.filter(l => {
-          const finishingStatusList: t.DeploymentStatus[] = [
-            'canceled', 'failed', 'success', 'partial_success'
-          ]
-          return finishingStatusList.includes(l.status)
-        }).map(l => l.timestamp)
-        return (finishingStatusLedgerEntries.length ?? 0) > 0
-          ? _.max(finishingStatusLedgerEntries)
-          : null
-      })(),
-      status: deployment.ledger.reduce((a, b) => {
-        return a.timestamp > b.timestamp ? a : b
-      })?.status,
-      ledger: deployment.ledger,
-      logs: _.sort(deployment.logStream?.chunks ?? [], c => c.timestamp).reduce((acc, chunk) => {
-        return `${acc}${chunk.content}`
-      }, ''),
-      attributes: deployment.attributes,
-      config: deployment.config,
+      unitId: deployment.unitId,
+      logId: deployment.logId,
+      type: deployment.type,
+      startedAt: deployment.startedAt,
+      finishedAt: deployment.finishedAt,
+      status: deployment.status,
+      output: deployment.output,
+      vars: deployment.vars,
       trigger: deployment.trigger
     }
   }
 }
 
-export class DomainDeploymentView {
-  static fromDomainDeployment(deployment: t.DomainDeployment): t.DomainDeploymentView {
-    return {
-      _view: 'exo.domain-deployment',
-      id: deployment.id,
-      platformId: deployment.platformId,
-      domainId: deployment.domainId,
-      startedAt: deployment.ledger.find(l => l.status === 'queued')?.timestamp ?? null,
-      finishedAt: (() => {
-        const finishingStatusLedgerEntries = deployment.ledger.filter(l => {
-          const finishingStatusList: t.DeploymentStatus[] = [
-            'canceled', 'failed', 'success', 'partial_success'
-          ]
-          return finishingStatusList.includes(l.status)
-        }).map(l => l.timestamp)
-        return (finishingStatusLedgerEntries.length ?? 0) > 0
-          ? _.max(finishingStatusLedgerEntries)
-          : null
-      })(),
-      status: deployment.ledger.reduce((a, b) => {
-        return a.timestamp > b.timestamp ? a : b
-      })?.status,
-      ledger: deployment.ledger,
-      logs: _.sort(deployment.logStream?.chunks ?? [], c => c.timestamp).reduce((acc, chunk) => {
-        return `${acc}${chunk.content}`
-      }, ''),
-    }
-  }
-}
-
 export class DeploymentContextView {
-  static fromModels({
+  static toView({
     platform,
+    workspace,
+    unit,
+    provider,
     deployment
   }: {
+    workspace: t.Workspace
     platform: t.Platform
+    unit: t.Unit
+    provider: t.AWSProvider | t.GCPProvider
     deployment: t.Deployment
   }): t.DeploymentContextView {
-    const service = platform.services.find(s => s.id === deployment.serviceId)
     return {
       _view: 'exo.deployment.context',
-      platform: _.shake({
-        ...ElevatedPlatformView.fromPlatform(platform),
-        services: undefined
+      workspace: _.shake({
+        ...WorkspaceView.toView(workspace),
+        platforms: undefined
       }),
-      service: ServiceView.fromService(service),
-      deployment: DeploymentView.fromDeployment(deployment)
-    }
-  }
-}
-
-export class DomainDeploymentContextView {
-  static fromModels({
-    platform,
-    deployment
-  }: {
-    platform: t.Platform
-    deployment: t.DomainDeployment
-  }): t.DomainDeploymentContextView {
-    const domain = platform.domains.find(d => d.id === deployment.domainId)
-    return {
-      _view: 'exo.domain-deployment.context',
+      provider,
       platform: _.shake({
-        ...ElevatedPlatformView.fromPlatform(platform),
-        services: undefined
+        ...PlatformView.toView(platform),
+        units: undefined
       }),
-      domain: DomainView.fromDomain(domain),
-      deployment: DomainDeploymentView.fromDomainDeployment(deployment)
+      unit: UnitView.toView(unit),
+      config: unit.config,
+      pack: BuildPackageRefView.toView(unit.pack),
+      deployment: DeploymentView.toView(deployment)
     }
   }
 }
 
 export default {
   UserView,
-  PlatformPreviewView,
+  WorkspaceView,
   PlatformView,
-  ElevatedPlatformView,
-  ServiceView,
+  UnitView,
   DeploymentView,
-  DomainDeploymentView,
   DomainView,
-  DeploymentContextView,
-  DomainDeploymentContextView
+  BuildPackageView,
+  DeploymentContextView
 }

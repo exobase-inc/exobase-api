@@ -7,10 +7,10 @@ import type { Props } from '@exobase/core'
 import { useCors, useService, useJsonArgs } from '@exobase/hooks'
 import { useLambda } from '@exobase/lambda'
 import { useTokenAuthentication } from '@exobase/auth'
-import { useMongoConnection } from '../../core/hooks/useMongoConnection'
-
 
 interface Args {
+  workspaceId: t.Id<'workspace'>
+  platformId: t.Id<'platform'>
   installationId: string
 }
 
@@ -18,18 +18,18 @@ interface Services {
   mongo: MongoClient
 }
 
-async function setGithubInstallationId({ args, auth, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<void> {
+async function addInstallationToPlatform({
+  args,
+  auth,
+  services
+}: Props<Args, Services, t.PlatformTokenAuth>): Promise<void> {
   const { mongo } = services
-  const { platformId } = auth.token.extra
-  const { installationId } = args
+  const { workspaceId } = auth.token.extra
 
-  const [err] = await mongo.addPlatformInstallation({
-    id: platformId,
-    installationId
-  })
-  if (err) throw err
+  const workspace = await mongo.findWorkspaceById(workspaceId)
+  const platform = workspace.platforms.find(p => p.id === args.platformId)
 
-  return
+  // TODO: What to do next???
 }
 
 export default _.compose(
@@ -41,11 +41,12 @@ export default _.compose(
     tokenSignatureSecret: config.tokenSignatureSecret
   }),
   useJsonArgs<Args>(yup => ({
+    workspaceId: yup.string().required(),
+    platformId: yup.string().required(),
     installationId: yup.string().required()
   })),
   useService<Services>({
     mongo: makeMongo()
   }),
-  useMongoConnection(),
-  setGithubInstallationId
+  addInstallationToPlatform
 )

@@ -1,11 +1,26 @@
 import { getFunctionMap, start, lambdaFrameworkMapper } from '@exobase/local'
+import path from 'path'
+import chalk from 'chalk'
 
-start({
-  port: '7700',
+const run = () => start({
+  port: process.env.PORT ?? '7701',
   framework: lambdaFrameworkMapper,
-  functions: getFunctionMap(process.cwd()).map((f) => ({ ...f,
-    func: require(f.paths.import).default
+  functions: getFunctionMap({
+    moduleDirectoryPath: path.join(__dirname, 'modules'),
+    extensions: ['.ts']
+  }).map((f) => ({
+    ...f,
+    func: async (...args: any[]) => {
+      const func = require(f.paths.import).default
+      console.log(chalk.green(`${f.module}.${f.function}(req)`))
+      return await func(...args)
+    }
   }))
 }, (p) => {
   console.log(`API running at http://localhost:${p}`)
+})
+
+run().catch((err) => {
+  console.error(err)
+  process.exit(1)
 })

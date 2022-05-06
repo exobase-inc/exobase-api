@@ -18,15 +18,15 @@ interface Services {
 }
 
 interface Response {
-  buildPackage: t.BuildPackage
+  pack: t.BuildPackage
 }
 
 async function addBuildPackageToRegistry({ auth, args, services }: Props<Args, Services, t.PlatformTokenAuth>): Promise<Response> {
   const { mongo, tf } = services
   const userId = auth.token.sub as t.Id<'user'>
 
-  const [noUser, user] = await mongo.findUserId({ userId })
-  if (noUser) {
+  const user = await mongo.findUserId({ userId })
+  if (!user) {
     throw errors.badRequest({
       details: 'User not found',
       key: 'exo.err.registry.add.no-user'
@@ -49,7 +49,7 @@ async function addBuildPackageToRegistry({ auth, args, services }: Props<Args, S
   // and that it has all required fields
   // and that the fields all have valid values
 
-  const buildPackage: t.BuildPackage = {
+  const pack: t.BuildPackage = {
     id: model.createId('pack'),
     name: mod.name,
     type: manifest.type,
@@ -57,11 +57,14 @@ async function addBuildPackageToRegistry({ auth, args, services }: Props<Args, S
     service: manifest.service ?? null,
     language: manifest.language ?? null,
     owner: mod.namespace,
+    repo: mod.source,
+    latest: mod.version,
     versions: [{
       version: mod.version,
       source: mod.source,
       publishedAt: new Date(mod.published_at).getTime(),
       readme: mod.root.readme,
+      manifest,
       inputs: mod.root.inputs.map(input => ({
         name:input.name,
         type:input.type,
@@ -74,7 +77,6 @@ async function addBuildPackageToRegistry({ auth, args, services }: Props<Args, S
         description: output.description
       }))
     }],
-    addedById: userId,
     addedBy: {
       id: userId,
       email: user.email,
@@ -84,11 +86,10 @@ async function addBuildPackageToRegistry({ auth, args, services }: Props<Args, S
     addedAt: Date.now()
   }
 
-  const [err] = await mongo.addBuildPackageToRegistry(buildPackage)
-  if (err) throw err
+  await mongo.addBuildPackageToRegistry(pack)
 
   return {
-    buildPackage
+    pack
   }
 }
 

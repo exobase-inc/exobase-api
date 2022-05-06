@@ -7,12 +7,11 @@ import type { Props } from '@exobase/core'
 import { useService, useJsonArgs } from '@exobase/hooks'
 import { useLambda } from '@exobase/lambda'
 import { useTokenAuthentication } from '@exobase/auth'
-import { useMongoConnection } from '../../core/hooks/useMongoConnection'
-
 
 interface Args {
-  deploymentId: string
-  chunk: t.DeploymentLogStreamChunk
+  logId: t.Id<'log'>
+  timestamp: number
+  content: string
 }
 
 interface Services {
@@ -21,11 +20,13 @@ interface Services {
 
 async function appendLogChunk({ args, services }: Props<Args, Services>) {
   const { mongo } = services
-  const [err] = await mongo.appendDeploymentLogChunk({ 
-    deploymentId: args.deploymentId,
-    chunk: args.chunk
+  await mongo.appendLogChunk({
+    logId: args.logId,
+    chunk: {
+      timestamp: args.timestamp,
+      content: args.content
+    }
   })
-  if (err) throw err  
 }
 
 export default _.compose(
@@ -37,15 +38,15 @@ export default _.compose(
     tokenSignatureSecret: config.tokenSignatureSecret
   }),
   useJsonArgs<Args>(yup => ({
-    deploymentId: yup.string().required(),
-    chunk: yup.object({
-      timestamp: yup.number().integer().positive().required(),
-      content: yup.string().required()
-    }).required()
+    logId: yup
+      .string()
+      .matches(/^exo\.log\.[a-z0-9]+$/)
+      .required(),
+    timestamp: yup.number().integer().positive().required(),
+    content: yup.string().required()
   })),
   useService<Services>({
     mongo: makeMongo()
   }),
-  useMongoConnection(),
   appendLogChunk
 )
