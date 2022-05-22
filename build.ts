@@ -17,7 +17,10 @@ const whitelist = [
 
 const start = async () => {
   await cmd('rm -rf ./build')
-  const functions = getFunctionMap(__dirname)
+  const functions = getFunctionMap({
+    moduleDirectoryPath: path.join(__dirname, 'src/modules'),
+    extensions: ['ts']
+  })
   await fs.promises.writeFile('./.manifest.json', JSON.stringify({
     functions
   }), 'utf8')
@@ -44,11 +47,12 @@ const start = async () => {
 }
 
 async function build(func: Func) {
-  console.log(`processing: ${func.module}/${func.function}.js`)
+  console.log(`transpiling to js... ${func.module}/${func.function}.ts`)
   await compile(func)
-  console.log(`compiled: ${func.module}/${func.function}.js`)
-  // await zip(func)
-  // console.log(`zipped: ${func.module}/${func.function}.js -> ${func.module}/${func.function}.zip`)
+  console.log(`transpiled: ${func.module}/${func.function}.js`)
+  console.log(`zipping... ${func.module}/${func.function}.js`)
+  await zip(func)
+  console.log(`zipped: ${func.module}/${func.function}.zip`)
 }
 
 function compile(func: Func) {

@@ -18,7 +18,7 @@ const main = async (args: Args) => {
     type: 'access',
     iss: 'exo.api',
     ttl: 120000000,
-    tokenSignatureSecret: config.tokenSignatureSecret
+    secret: config.tokenSignatureSecret
   })
   console.log(token)
 }

@@ -56,6 +56,12 @@ async function getSourceDownloadLink({
   }
 
   const source = unit.source
+  if (!source) {
+    throw errors.notFound({
+      details: 'The unit does not have a repository connected or configured',
+      key: 'exo.err.units.get-source-download-link.no-source'
+    })
+  }
 
   if (!source.private) {
     return {
@@ -101,7 +107,7 @@ export default _.compose(
       .required(),
     deploymentId: yup
       .string()
-      .matches(/^exo\.unit\.[a-z0-9]+$/)
+      .matches(/^exo\.deploy\.[a-z0-9]+$/)
       .required()
   })),
   useTokenAuthentication({

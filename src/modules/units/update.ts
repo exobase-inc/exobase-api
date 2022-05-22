@@ -85,21 +85,24 @@ async function updateUnitOfInfrastructure({
       config: args.config,
       source: args.source
     }),
-    ledger: [...unit.ledger, {
-      timestamp: Date.now(),
-      event: 'unit-updated',
-      userId,
-      user: {
-        id: userId,
-        username,
-        thumbnailUrl
-      },
-      snapshot: _.shake({
-        ...unit,
-        ledger: undefined,
-        deployments: undefined
-      })
-    }]
+    ledger: [
+      ...unit.ledger,
+      {
+        timestamp: Date.now(),
+        event: 'unit-updated',
+        userId,
+        user: {
+          id: userId,
+          username,
+          thumbnailUrl
+        },
+        snapshot: _.shake({
+          ...unit,
+          ledger: undefined,
+          deployments: undefined
+        })
+      }
+    ]
   }
   const newWorkspace: t.Workspace = {
     ...workspace,
@@ -145,15 +148,12 @@ export default _.compose(
       .matches(/^exo\.unit\.[a-z0-9]+$/)
       .required(),
     name: yup.string(),
-    tags: yup
-      .array()
-      .of(
-        yup.object({
-          name: yup.string().required(),
-          value: yup.string().required()
-        })
-      )
-      .required(),
+    tags: yup.array().of(
+      yup.object({
+        name: yup.string().required(),
+        value: yup.string().required()
+      })
+    ),
     config: yup.mixed(),
     source: yup.object({
       installationId: yup.string().nullable(),

@@ -6,9 +6,9 @@ import * as Mongo from 'mongodb'
 
 // Import migration functions and 
 // add to migrations list
-import platforms_serviceBuildPack from './platforms/1-service-build-packs'
+// import platforms_serviceBuildPack from './platforms/1-service-build-packs'
 const ALL_MIGRATIONS: Migration[] = [
-  platforms_serviceBuildPack
+  // platforms_serviceBuildPack
 ]
 
 const ensureMigrated = async <T extends MongoDocument>(
