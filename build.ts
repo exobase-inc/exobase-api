@@ -29,7 +29,7 @@ const start = async () => {
   // machine doesn't spin out of control like a
   // nuclear meltdown building 30+ functions all
   // with errors.
-  const [err] = await _.try(build)(first)
+  const [err] = await _.try(compile)(first)
   if (err) {
     console.error(err)
     return
@@ -39,20 +39,11 @@ const start = async () => {
   const clusters = _.cluster(rest, 6)
   for (const funcs of clusters) {
     await Promise.allSettled(funcs.map(func => {
-      return build(func).catch(err => {
+      return compile(func).catch(err => {
         console.error(err)
       })
     }))
   }
-}
-
-async function build(func: Func) {
-  console.log(`transpiling to js... ${func.module}/${func.function}.ts`)
-  await compile(func)
-  console.log(`transpiled: ${func.module}/${func.function}.js`)
-  console.log(`zipping... ${func.module}/${func.function}.js`)
-  await zip(func)
-  console.log(`zipped: ${func.module}/${func.function}.zip`)
 }
 
 function compile(func: Func) {
