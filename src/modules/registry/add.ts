@@ -57,21 +57,30 @@ async function addBuildPackageToRegistry({ auth, args, services }: Props<Args, S
     service: manifest.service ?? null,
     language: manifest.language ?? null,
     owner: mod.namespace,
+    namespace: mod.namespace,
     repo: mod.source,
     latest: mod.version,
+    url: args.url,
     versions: [{
       version: mod.version,
       source: mod.source,
       publishedAt: new Date(mod.published_at).getTime(),
       readme: mod.root.readme,
       manifest,
-      inputs: mod.root.inputs.map(input => ({
-        name:input.name,
-        type:input.type,
-        description:input.description,
-        default:input.default,
-        required:input.required
-      })),
+      inputs: mod.root.inputs.map(input => {
+        const manifestProps = manifest.inputs[input.name]
+        return {
+          name: input.name,
+          type: input.type,
+          description: input.description,
+          default: input.default,
+          required: input.required,
+          ui: manifestProps?.ui ?? (input.type as 'string' | 'number' | 'bool'),
+          options: manifestProps?.options ?? null,
+          label: manifestProps?.label ?? input.name,
+          placeholder: manifestProps?.placeholder ?? null
+        }
+      }),
       outputs: mod.root.outputs.map(output => ({
         name: output.name,
         description: output.description

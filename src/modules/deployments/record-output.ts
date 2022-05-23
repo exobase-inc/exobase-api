@@ -28,6 +28,11 @@ async function recordDeploymentOutput({ args, services }: Props<Args, Services, 
   const unit = platform.units.find(u => u.id === args.unitId)
   const deployment = unit.deployments.find(d => d.id === args.deploymentId)
 
+  const updatedDeployemnt: t.Deployment = {
+    ...deployment,
+    output: args.output
+  }
+
   const newWorkspace: t.Workspace = {
     ...workspace,
     platforms: _.replace(
@@ -39,12 +44,15 @@ async function recordDeploymentOutput({ args, services }: Props<Args, Services, 
           {
             ...unit,
             attributes: args.output,
+            latestDeployment: unit.latestDeployment?.id === updatedDeployemnt.id 
+              ? updatedDeployemnt 
+              : unit.latestDeployment,
+            activeDeployment: unit.activeDeployment?.id === updatedDeployemnt.id 
+              ? updatedDeployemnt 
+              : unit.activeDeployment,
             deployments: _.replace(
               unit.deployments,
-              {
-                ...deployment,
-                output: args.output
-              },
+              updatedDeployemnt,
               d => d.id === deployment.id
             )
           },

@@ -16,6 +16,7 @@ export type ExobaseService = 'api' | 'app' | 'websocket-server' | 'static-websit
 export type UserRole = 'user' | 'admin'
 export type MemberRole = 'owner' | 'admin' | 'developer' | 'guest'
 export type DeploymentStatus = 'queued' | 'canceled' | 'in_progress' | 'success' | 'partial_success' | 'failed'
+export type PackConfigUIType = 'string' | 'number' | 'bool' | 'select' | 'multi-select' | 'envars'
 export type CloudService =
   | 'lambda'
   | 'ec2'
@@ -186,10 +187,17 @@ export interface BuildPackage {
   service: CloudService | null
   language: Language | null
   owner: string
+  namespace: string
   latest: string
   versions: BuildPackageVersion[]
+  url: string
   addedBy: Pick<User, 'id' | 'email' | 'username' | 'thumbnailUrl'>
   addedAt: number
+}
+
+export type BuildPackConfigOption = {
+  info: string
+  value: string
 }
 
 export interface BuildPackageVersion {
@@ -204,6 +212,10 @@ export interface BuildPackageVersion {
     description: string
     default: string
     required: boolean
+    ui: PackConfigUIType
+    label: string
+    options: null | BuildPackConfigOption[]
+    placeholder: null | string
   }[]
   outputs: {
     name: string
@@ -222,7 +234,10 @@ export type BuildPackageManifest = {
   inputs?: Record<
     string,
     {
-      type: 'string' | 'number' | 'envars'
+      ui?: PackConfigUIType
+      label?: string
+      options?: BuildPackConfigOption[]
+      placeholder?: string
     }
   >
   build?: {

@@ -238,6 +238,16 @@ const createApi = (url: string) => {
       }>({
         module: 'units',
         function: 'update'
+      }),
+      upgradePack: endpoint<{
+        workspaceId: string
+        platformId: string
+        unitId: string
+      }, {
+        unit: t.Unit
+      }>({
+        module: 'units',
+        function: 'upgrade-pack'
       })
     },
     registry: {
@@ -259,6 +269,14 @@ const createApi = (url: string) => {
       }>({
         module: 'registry',
         function: 'search'
+      }),
+      sync: endpoint<{
+        packId: string
+      }, {
+        pack: t.BuildPackage
+      }>({
+        module: 'registry',
+        function: 'sync'
       }),
     },
     source: {

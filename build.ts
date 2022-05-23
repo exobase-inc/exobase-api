@@ -21,9 +21,13 @@ const start = async () => {
     moduleDirectoryPath: path.join(__dirname, 'src/modules'),
     extensions: ['ts']
   })
-  await fs.promises.writeFile('./.manifest.json', JSON.stringify({
-    functions
-  }), 'utf8')
+  await fs.promises.writeFile(
+    './.manifest.json',
+    JSON.stringify({
+      functions
+    }),
+    'utf8'
+  )
   const [first, ...rest] = whitelist.length > 0 ? functions.filter(f => whitelist.includes(f.function)) : functions
   // Build one first so if there is an error our
   // machine doesn't spin out of control like a
@@ -38,61 +42,60 @@ const start = async () => {
   // help to not melt my machine down
   const clusters = _.cluster(rest, 6)
   for (const funcs of clusters) {
-    await Promise.allSettled(funcs.map(func => {
-      return compile(func).catch(err => {
-        console.error(err)
+    await Promise.allSettled(
+      funcs.map(func => {
+        return compile(func).catch(err => {
+          console.error(err)
+        })
       })
-    }))
+    )
   }
 }
 
 function compile(func: Func) {
   return new Promise<void>((res, rej) => {
-    webpack({
-      entry: [`./src/modules/${func.module}/${func.function}.ts`],
-      mode: (process.env.NODE_ENV as 'production' | 'development') ?? 'production',
-      target: 'async-node14',
-      output: {
-        library: {
-          type: 'commonjs2'
+    webpack(
+      {
+        entry: [`./src/modules/${func.module}/${func.function}.ts`],
+        mode: (process.env.NODE_ENV as 'production' | 'development') ?? 'production',
+        target: 'async-node14',
+        output: {
+          library: {
+            type: 'commonjs2'
+          },
+          path: path.resolve(__dirname, 'build', 'modules', func.module),
+          filename: `${func.function}.js`
         },
-        path: path.resolve(__dirname, 'build', 'modules', func.module),
-        filename: `${func.function}.js`
+        resolve: {
+          extensions: ['.ts', '.js']
+        },
+        module: {
+          rules: [
+            {
+              test: /\.ts$/,
+              use: ['ts-loader']
+            }
+          ]
+        },
+        optimization: {
+          minimize: true,
+          minimizer: [
+            new TerserPlugin({
+              extractComments: false // false = do not generate LICENSE files
+            })
+          ]
+        }
       },
-      resolve: {
-        extensions: ['.ts', '.js']
-      },
-      module: {
-        rules: [
-          {
-            test: /\.ts$/,
-            use: ['ts-loader']
-          }
-        ]
-      },
-      optimization: {
-        minimize: true,
-        minimizer: [
-          new TerserPlugin({
-            extractComments: false // false = do not generate LICENSE files
-          })
-        ]
+      (err, stats) => {
+        if (stats.hasErrors()) {
+          rej({ errors: stats.toJson().errors })
+        }
+        if (err) {
+          rej(err)
+        }
+        res()
       }
-    }, (err, stats) => {
-      if (stats.hasErrors()) {
-        rej({ errors: stats.toJson().errors })
-      }
-      if (err) {
-        rej(err)
-      }
-      res()
-    })
-  })
-}
-
-function zip(func: Func) {
-  return cmd(`zip -q ${func.function}.zip ${func.function}.js`, {
-    cwd: path.resolve(__dirname, 'build', 'modules', func.module)
+    )
   })
 }
 

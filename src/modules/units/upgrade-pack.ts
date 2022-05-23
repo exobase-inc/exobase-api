@@ -12,21 +12,6 @@ interface Args {
   workspaceId: t.Id<'workspace'>
   platformId: t.Id<'platform'>
   unitId: t.Id<'unit'>
-  name?: string
-  tags?: {
-    name: string
-    value: string
-  }[]
-  config?: any
-  source?: {
-    installationId: string | null
-    private: boolean
-    repoId: string
-    owner: string
-    repo: string
-    branch: string
-    provider: 'github'
-  }
 }
 
 interface Services {
@@ -37,7 +22,7 @@ interface Response {
   unit: t.UnitView
 }
 
-async function updateUnitOfInfrastructure({
+async function upgradePack({
   auth,
   args,
   services
@@ -49,7 +34,7 @@ async function updateUnitOfInfrastructure({
   if (args.workspaceId !== workspaceId) {
     throw errors.badRequest({
       details: 'Cannot create a unit of infrastructure in a workspace you are not currently authenticated with',
-      key: 'exo.err.units.update.workspace-mismatch'
+      key: 'exo.err.units.upgrade-pack.workspace-mismatch'
     })
   }
 
@@ -57,7 +42,7 @@ async function updateUnitOfInfrastructure({
   if (!workspace) {
     throw errors.notFound({
       details: 'Could not find a workspace matching the current session',
-      key: 'exo.err.units.update.no-workspace'
+      key: 'exo.err.units.upgrade-pack.no-workspace'
     })
   }
 
@@ -65,7 +50,7 @@ async function updateUnitOfInfrastructure({
   if (!platform) {
     throw errors.notFound({
       details: 'Could not find a platform matching the given id',
-      key: 'exo.err.units.update.no-platform'
+      key: 'exo.err.units.upgrade-pack.no-platform'
     })
   }
 
@@ -73,18 +58,18 @@ async function updateUnitOfInfrastructure({
   if (!unit) {
     throw errors.notFound({
       details: 'Could not find a unit matching the given id',
-      key: 'exo.err.units.update.no-unit'
+      key: 'exo.err.units.upgrade-pack.no-unit'
     })
   }
 
+  const pack = await mongo.findBuildPackageById({ id: unit.pack.id })
+
   const newUnit: t.Unit = {
     ...unit,
-    ..._.shake({
-      name: args.name,
-      tags: args.tags,
-      config: args.config,
-      source: args.source
-    }),
+    pack: {
+      ...unit.pack,
+      version: pack.versions.find(p => p.version === pack.latest)
+    },
     ledger: [
       ...unit.ledger,
       {
@@ -146,27 +131,10 @@ export default _.compose(
     unitId: yup
       .string()
       .matches(/^exo\.unit\.[a-z0-9]+$/)
-      .required(),
-    name: yup.string(),
-    tags: yup.array().of(
-      yup.object({
-        name: yup.string().required(),
-        value: yup.string().required()
-      })
-    ),
-    config: yup.mixed(),
-    source: yup.object({
-      installationId: yup.string().nullable(),
-      private: yup.boolean(),
-      repoId: yup.string().required(),
-      owner: yup.string().required(),
-      repo: yup.string().required(),
-      branch: yup.string().required(),
-      provider: yup.string().oneOf(['github'])
-    })
+      .required()
   })),
   useService<Services>({
     mongo: makeMongo()
   }),
-  updateUnitOfInfrastructure
+  upgradePack
 )

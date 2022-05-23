@@ -99,6 +99,7 @@ async function deployServiceViaUi({ auth, args, services }: Props<Args, Services
           platform.units,
           {
             ...unit,
+            latestDeployment: deployment,
             deployments: [...unit.deployments, deployment]
           },
           u => u.id === unit.id

@@ -28,6 +28,11 @@ async function updateDeploymentStatus({ args, services }: Props<Args, Services, 
   const unit = platform.units.find(u => u.id === args.unitId)
   const deployment = unit.deployments.find(d => d.id === args.deploymentId)
 
+  const updatedDeployemnt: t.Deployment = {
+    ...deployment,
+    status: args.status
+  }
+
   const newWorkspace: t.Workspace = {
     ...workspace,
     platforms: _.replace(
@@ -38,12 +43,11 @@ async function updateDeploymentStatus({ args, services }: Props<Args, Services, 
           platform.units,
           {
             ...unit,
+            latestDeployment: unit.latestDeployment?.id === updatedDeployemnt.id ? updatedDeployemnt : unit.latestDeployment,
+            activeDeployment: args.status === 'success' ? updatedDeployemnt : unit.activeDeployment,
             deployments: _.replace(
               unit.deployments,
-              {
-                ...deployment,
-                status: args.status
-              },
+              updatedDeployemnt,
               d => d.id === deployment.id
             )
           },

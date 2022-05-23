@@ -213,7 +213,25 @@ const createMongoClient = (client: Mongo.MongoClient) => {
         language?: t.Language | null
       }) => args,
       toModel: mappers.BuildPackageDocument.toModel
-    })
+    }),
+    updateBuildPackage: updateOne<
+      t.BuildPackageDocument,
+      {
+        id: t.Id<'pack'>
+        pack: t.BuildPackage
+      }
+    >({
+      db,
+      collection: 'registry',
+      toQuery: ({ id }) => ({
+        _id: oid(id)
+      }),
+      toUpdate: ({ pack }) => ({
+        $set: {
+          ...pack
+        }
+      })
+    }),
   }
 }
 
