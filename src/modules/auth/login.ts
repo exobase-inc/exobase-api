@@ -64,6 +64,10 @@ async function loginOrCreateUser({ args, services }: Props<Args, Services>): Pro
 }
 
 export default _.compose(
+  (func) => (...args: any) => {
+    console.log(args)
+    return func(...args)
+  },
   useLambda(),
   useCors(),
   useJsonArgs(yup => ({
