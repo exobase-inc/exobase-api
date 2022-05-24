@@ -41,7 +41,7 @@
     "@exobase/client-builder": "^0.0.5",
     "@exobase/core": "^0.0.6",
     "@exobase/hooks": "^0.0.10",
-    "@exobase/lambda": "^0.0.12",
+    "@exobase/lambda": "^0.0.13",
     "@exobase/local": "^0.0.21",
     "@magic-sdk/admin": "^1.3.4",
     "@octokit/auth-app": "^3.6.1",
