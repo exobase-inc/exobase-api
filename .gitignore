@@ -2,6 +2,8 @@
 
 # Exobase
 .manifest.json
+.exobase
+archive.zip
 
 # Env
 env.sh

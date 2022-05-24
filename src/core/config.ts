@@ -16,6 +16,9 @@ const config = {
     githubPrivateKey: get('GITHUB_PRIVATE_KEY').replace(/\\n/g, '\n'),
     githubAppId: get('GITHUB_APP_ID'),
     githubClientId: get('GITHUB_CLIENT_ID'),
+    s3UploadsAccessKeyId: get('S3_UPLOADS_ACCESS_KEY_ID'),
+    s3UploadsAccessKey: get('S3_UPLOADS_ACCESS_KEY'),
+    s3UploadsBucket: get('S3_UPLOADS_BUCKET')
 }
 
 export type Config = typeof config

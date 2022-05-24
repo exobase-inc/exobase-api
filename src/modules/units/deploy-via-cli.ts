@@ -16,6 +16,10 @@ interface Args {
   unitId: t.Id<'unit'>
   platformId: t.Id<'platform'>
   workspaceId: t.Id<'workspace'>
+  upload: {
+    id: string
+    timestamp: number 
+  }
 }
 
 interface Services {
@@ -83,8 +87,12 @@ async function deployServiceViaCli({
     vars: unit.config,
     pack: unit.pack,
     trigger: {
-      type: 'user-ui',
+      type: 'user-cli',
       git: null,
+      upload: {
+        id: args.upload.id,
+        timestamp: args.upload.timestamp
+      },
       user: {
         id: userId,
         username,
@@ -150,7 +158,6 @@ export default _.compose(
     tokenSignatureSecret: config.tokenSignatureSecret
   }),
   useJsonArgs<Args>(yup => ({
-    source: yup.string().required(),
     workspaceId: yup
       .string()
       .matches(/^exo\.workspace\.[a-z0-9]+$/)
@@ -162,7 +169,11 @@ export default _.compose(
     unitId: yup
       .string()
       .matches(/^exo\.unit\.[a-z0-9]+$/)
-      .required()
+      .required(),
+    upload: yup.object({
+      timestamp: yup.number().required(),
+      id: yup.string().required()
+    }).required()
   })),
   useService<Services>({
     mongo: makeMongo(),

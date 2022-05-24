@@ -80,6 +80,7 @@ async function destroyUnit({ auth, args, services }: Props<Args, Services, t.Pla
     trigger: {
       type: 'user-ui',
       git: null,
+      upload: null,
       user: {
         id: userId,
         username,

@@ -76,6 +76,33 @@ const createApi = (url: string) => {
         module: 'deployments',
         function: 'get-context'
       }),
+      preUploadSource: endpoint<{
+        workspaceId: string
+        platformId: string
+        unitId: string
+      }, {
+        timestamp: number
+        id: string
+        url: string
+        exp: number
+      }>({
+        module: 'deployments',
+        function: 'pre-upload-source'
+      }),
+      getUploadSourceLink: endpoint<{
+        workspaceId: string
+        platformId: string
+        unitId: string
+        upload: {
+          id: string
+          timestamp: number
+        }
+      }, {
+        url: string
+      }>({
+        module: 'deployments',
+        function: 'get-upload-source-link'
+      }),
       recordOutput: endpoint<{
         workspaceId: string
         platformId: string
@@ -169,6 +196,10 @@ const createApi = (url: string) => {
         unitId: string
         platformId: string
         workspaceId: string
+        upload: {
+          id: string
+          timestamp: number
+        }
       }, {
         deploy: t.Deployment
       }>({

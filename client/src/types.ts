@@ -58,6 +58,10 @@ export type Deployment = {
   trigger: {
     type: 'user-ui' | 'user-cli' | 'github-push'
     user: null | Pick<User, 'id' | 'username' | 'thumbnailUrl'>
+    upload: null | {
+      timestamp: number
+      id: string
+    }
     git: null | {
       commit: string
       private: boolean

@@ -99,6 +99,7 @@ async function addDomain({ auth, args, services }: Props<Args, Services, t.Platf
         }) as t.BuildPackageRef,
         trigger: {
           type: 'user-ui',
+          upload: null,
           user: {
             id: userId,
             username,

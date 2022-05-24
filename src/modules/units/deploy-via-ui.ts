@@ -81,6 +81,7 @@ async function deployServiceViaUi({ auth, args, services }: Props<Args, Services
     trigger: {
       type: 'user-ui',
       git: null,
+      upload: null,
       user: {
         id: userId,
         username,
