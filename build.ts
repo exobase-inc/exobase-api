@@ -11,10 +11,6 @@ interface Func {
   function: string
 }
 
-const whitelist = [
-  // 'enrichEventOnChange'
-]
-
 const start = async () => {
   await cmd('rm -rf ./build')
   const functions = getFunctionMap({
@@ -28,7 +24,7 @@ const start = async () => {
     }),
     'utf8'
   )
-  const [first, ...rest] = whitelist.length > 0 ? functions.filter(f => whitelist.includes(f.function)) : functions
+  const [first, ...rest] = functions
   // Build one first so if there is an error our
   // machine doesn't spin out of control like a
   // nuclear meltdown building 30+ functions all
@@ -53,6 +49,7 @@ const start = async () => {
 }
 
 function compile(func: Func) {
+  console.log(`transpiling ${func.module}/${func.function}`)
   return new Promise<void>((res, rej) => {
     webpack(
       {

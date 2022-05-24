@@ -100,6 +100,13 @@ export interface Platform {
   createdAt: number
 }
 
+export interface Attribute {
+  sensitive: boolean
+  type: 'string' | 'number' | 'bool'
+  value: string | number | boolean
+  name: string
+}
+
 export interface Unit {
   id: Id<'unit'>
   name: string

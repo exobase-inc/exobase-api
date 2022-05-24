@@ -8,7 +8,6 @@ const get = <T = string>(name: string, defaultValue: T = null, cast: (v: any) =>
 const config = {
     env: get('EXOBASE_ENV'),
     logLevel: get('LOG_LEVEL'),
-    magicSecret: get('MAGIC_SECRET'),
     tokenSignatureSecret: get('TOKEN_SIG_SECRET'),
     mongoUri: get('MONGO_URI'),
     builderApiUrl: get('BUILDER_API_URL'),
