@@ -75,7 +75,7 @@ async function deployServiceViaUi({ auth, args, services }: Props<Args, Services
     startedAt: Date.now(),
     finishedAt: null,
     status: 'queued',
-    output: {},
+    output: [],
     vars: unit.config,
     pack: unit.pack,
     trigger: {
@@ -109,6 +109,16 @@ async function deployServiceViaUi({ auth, args, services }: Props<Args, Services
       p => p.id === platform.id
     )
   }
+
+  await mongo.addLog({
+    id: logId,
+    deploymentId: deployment.id,
+    workspaceId,
+    platformId: platform.id,
+    unitId: unit.id,
+    stream: []
+  })
+  
   // TODO: Handle errors like a boss
   await mongo.updateWorkspace({
     id: workspace.id,

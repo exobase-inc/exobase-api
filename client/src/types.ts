@@ -42,6 +42,13 @@ export type Workspace = {
   }[]
 }
 
+export interface DeploymentOutput {
+  name: string
+  type: 'number' | 'string' | 'bool'
+  value: string | number | boolean
+  sensitive: boolean
+}
+
 export type Deployment = {
   _view: 'exo.deployment'
   id: string
@@ -53,7 +60,7 @@ export type Deployment = {
   startedAt: number
   finishedAt: number | null
   status: DeploymentStatus
-  output: any
+  output: DeploymentOutput[]
   vars: any
   trigger: {
     type: 'user-ui' | 'user-cli' | 'github-push'

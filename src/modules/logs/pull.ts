@@ -10,6 +10,7 @@ import { useTokenAuthentication } from '@exobase/auth'
 
 interface Args {
   logId: t.Id<'log'>
+  after?: number
 }
 
 interface Services {
@@ -25,9 +26,14 @@ interface Response {
 
 async function pullLogStream({ args, services }: Props<Args, Services>): Promise<Response> {
   const { mongo } = services
-  const log = await mongo.findLog(args.logId)
+  const log = await mongo.findLog({
+    logId: args.logId
+  })
+  if (!log) return {
+    stream: []
+  }
   return {
-    stream: log.stream
+    stream: args.after ? log.stream.filter(s => s.timestamp > args.after) : log.stream
   }
 }
 
@@ -40,6 +46,7 @@ export default _.compose(
     tokenSignatureSecret: config.tokenSignatureSecret
   }),
   useJsonArgs<Args>(yup => ({
+    after: yup.number(),
     logId: yup
       .string()
       .matches(/^exo\.log\.[a-z0-9]+$/)

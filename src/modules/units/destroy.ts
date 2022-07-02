@@ -74,7 +74,7 @@ async function destroyUnit({ auth, args, services }: Props<Args, Services, t.Pla
     startedAt: Date.now(),
     finishedAt: null,
     status: 'queued',
-    output: {},
+    output: [],
     vars: unit.config,
     pack: unit.pack,
     trigger: {

@@ -88,7 +88,7 @@ async function addDomain({ auth, args, services }: Props<Args, Services, t.Platf
         status: 'queued',
         startedAt: Date.now(),
         finishedAt: null,
-        output: {},
+        output: [],
         vars: {
           domain: args.domain
         },

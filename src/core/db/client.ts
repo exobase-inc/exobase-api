@@ -138,7 +138,7 @@ const createMongoClient = (client: Mongo.MongoClient) => {
     findLog: findItem({
       db,
       collection: 'logs',
-      toQuery: (logId: t.Id<'log'>) => ({
+      toQuery: ({ logId }: { logId: t.Id<'log'> }) => ({
         _id: oid(logId)
       }),
       toModel: mappers.LogDocument.toModel
@@ -199,7 +199,10 @@ const createMongoClient = (client: Mongo.MongoClient) => {
         owner: string
         type: t.ExobaseService
       }) => ({
-        name, provider, owner, type
+        name,
+        provider,
+        owner,
+        type
       }),
       toModel: mappers.BuildPackageDocument.toModel
     }),
@@ -231,7 +234,7 @@ const createMongoClient = (client: Mongo.MongoClient) => {
           ...pack
         }
       })
-    }),
+    })
   }
 }
 

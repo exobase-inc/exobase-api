@@ -144,6 +144,13 @@ export interface Unit {
   createdAt: number
 }
 
+export interface DeploymentOutput {
+  name: string
+  type: 'number' | 'string' | 'bool'
+  value: string | number | boolean
+  sensitive: boolean
+}
+
 export interface Deployment {
   id: Id<'deploy'>
   type: 'create' | 'destroy'
@@ -154,7 +161,7 @@ export interface Deployment {
   status: DeploymentStatus
   startedAt: number
   finishedAt: number | null
-  output: any
+  output: DeploymentOutput[]
   vars: any
   pack: BuildPackageRef
   trigger: {

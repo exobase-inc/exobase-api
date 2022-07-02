@@ -13,7 +13,7 @@ interface Args {
   platformId: t.Id<'platform'>
   unitId: t.Id<'unit'>
   deploymentId: t.Id<'deploy'>
-  output: any
+  output: t.DeploymentOutput[]
 }
 
 interface Services {

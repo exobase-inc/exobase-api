@@ -44,7 +44,7 @@ export type DeploymentView = {
   startedAt: number
   finishedAt: number | null
   status: t.DeploymentStatus
-  output: any
+  output: t.DeploymentOutput[]
   vars: any
   trigger: {
     type: 'user-ui' | 'user-cli' | 'github-push'

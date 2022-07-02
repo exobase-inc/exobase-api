@@ -201,7 +201,7 @@ const createApi = (url: string) => {
           timestamp: number
         }
       }, {
-        deploy: t.Deployment
+        deployment: t.Deployment
       }>({
         module: 'units',
         function: 'deploy-via-cli'
@@ -211,7 +211,7 @@ const createApi = (url: string) => {
         platformId: string
         workspaceId: string
       }, {
-        deploy: t.Deployment
+        deployment: t.Deployment
       }>({
         module: 'units',
         function: 'deploy-via-ui'
@@ -359,6 +359,7 @@ const createApi = (url: string) => {
       }),
       pull: endpoint<{
         logId: string
+        after?: number
       }, {
         stream: {
           timestamp: number
