@@ -1,4 +1,4 @@
-import _ from 'radash'
+import * as _ from 'radash'
 import * as t from '../../core/types'
 import mappers from '../../core/view/mappers'
 import makeMongo, { MongoClient } from '../../core/db'
@@ -116,11 +116,11 @@ async function destroyUnit({ auth, args, services }: Props<Args, Services, t.Pla
   const builderResponse = await builder.trigger.build(
     {
       args: {
-        logId,
         deploymentId: deployment.id,
         workspaceId,
         platformId: platform.id,
-        unitId: unit.id
+        unitId: unit.id,
+        logId
       }
     },
     { key: config.builderApiKey }

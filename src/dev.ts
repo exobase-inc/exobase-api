@@ -1,25 +1,31 @@
-import { getFunctionMap, start, lambdaFrameworkMapper } from '@exobase/local'
+import { start } from '@exobase/local'
+import { map } from 'radash'
+import * as glob from 'glob'
 import path from 'path'
-import chalk from 'chalk'
+import * as lama from 'aws-lama'
 
-const run = () => start({
-  port: process.env.PORT ?? '7701',
-  framework: lambdaFrameworkMapper,
-  functions: getFunctionMap({
-    moduleDirectoryPath: path.join(__dirname, 'modules'),
-    extensions: ['.ts']
-  }).map((f) => ({
-    ...f,
-    func: async (...args: any[]) => {
-      const func = require(f.paths.import).default
-      console.log(chalk.green(`${f.module}.${f.function}(req)`))
-      return await func(...args)
+const funcs = glob.sync('src/modules/**/*.ts').map(p => path.join(process.cwd(), p))
+
+const run = async () => start({
+  port: process.env.PORT ?? '7705',
+  functions: await map(funcs, async funcPath => ({
+    path: funcPath,
+    url: funcPath.replace(/^.+?modules/, '').replace(/\.ts$/, ''),
+    handler: (await import(funcPath)).default
+  })),
+  framework: {
+    toArgs: async (req, res) => {
+      const { event, context } = await lama.toEventContext(req, res)
+      return [event, context]
+    },
+    toRes: async (req, res, result) => {
+      lama.toHttpResponse(result, res)
     }
-  }))
+  }
 }, (p) => {
   console.log(`API running at http://localhost:${p}`)
 })
-
+ 
 run().catch((err) => {
   console.error(err)
   process.exit(1)

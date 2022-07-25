@@ -1,4 +1,4 @@
-import _ from 'radash'
+import * as _ from 'radash'
 import config from '../../core/config'
 import { PushEvent } from '@octokit/webhooks-types'
 // import { useGithubWebhook, GithubWebhookArgs } from 'exo-use-github-webhook'

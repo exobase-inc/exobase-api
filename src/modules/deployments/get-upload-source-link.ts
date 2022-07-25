@@ -1,4 +1,4 @@
-import _ from 'radash'
+import * as _ from 'radash'
 import * as t from '../../core/types'
 import * as crypto from 'crypto'
 import makeMongo, { MongoClient } from '../../core/db'

@@ -1,4 +1,4 @@
-import _ from 'radash'
+import * as _ from 'radash'
 import config from '../../core/config'
 // import { useStripeWebhook, StripeWebhookArgs } from 'exo-use-stripe-webhook'
 import type { Props } from '@exobase/core'

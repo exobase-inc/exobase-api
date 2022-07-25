@@ -1,4 +1,3 @@
-import _ from 'radash'
 import makeApi from '@exobase/client-builder'
 import config from './config'
 

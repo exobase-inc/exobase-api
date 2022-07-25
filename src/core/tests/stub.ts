@@ -1,4 +1,4 @@
-import _ from 'radash'
+import * as _ from 'radash'
 
 interface PropertyActivity {
   called: number,

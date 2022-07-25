@@ -1,5 +1,5 @@
 import * as t from '../types'
-import _ from 'radash'
+import * as _ from 'radash'
 
 export class UserView {
   static toView(user: t.User, workspaces: t.Workspace[]): t.UserView {

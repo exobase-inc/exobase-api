@@ -1,4 +1,4 @@
-import _ from 'radash'
+import * as _ from 'radash'
 import minimist from 'minimist'
 import config from '../core/config'
 import { createToken } from '@exobase/auth'

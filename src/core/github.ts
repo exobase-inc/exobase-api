@@ -1,4 +1,4 @@
-import _ from 'radash'
+import * as _ from 'radash'
 import config from './config'
 import { createAppAuth } from "@octokit/auth-app"
 import { request } from "@octokit/request"

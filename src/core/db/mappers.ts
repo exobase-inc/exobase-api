@@ -1,5 +1,5 @@
 import * as t from '../types'
-import _ from 'radash'
+import * as _ from 'radash'
 
 export class UserDocument {
   static toModel(document: t.UserDocument): t.User {

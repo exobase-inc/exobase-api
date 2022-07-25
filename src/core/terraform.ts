@@ -1,4 +1,4 @@
-import _ from 'radash'
+import * as _ from 'radash'
 import axios from 'axios'
 import { URL } from 'url'
 import * as t from './types'

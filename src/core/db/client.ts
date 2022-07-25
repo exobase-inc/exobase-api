@@ -1,4 +1,4 @@
-import _ from 'radash'
+import * as _ from 'radash'
 import * as Mongo from 'mongodb'
 import { ObjectId } from 'mongodb'
 import * as t from '../types'
@@ -9,8 +9,7 @@ import { CURRENT_VERSIONS } from './collections'
 const deprefix = (str: t.Id) => str.replace(/exo\..+?\./, '')
 const oid = (id: t.Id) => new ObjectId(deprefix(id))
 
-const createMongoClient = (client: Mongo.MongoClient) => {
-  const db = client.connect().then(c => c.db('main'))
+const createMongoClient = (db: Promise<Mongo.Db>) => {
   return {
     //
     // USER

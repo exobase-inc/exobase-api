@@ -1,4 +1,4 @@
-import _ from 'radash'
+import * as _ from 'radash'
 import * as Mongo from 'mongodb'
 import * as t from '../types'
 import type { Collection } from './collections'

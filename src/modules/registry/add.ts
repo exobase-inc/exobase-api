@@ -1,4 +1,4 @@
-import _ from 'radash'
+import * as _ from 'radash'
 import * as t from '../../core/types'
 import makeMongo, { MongoClient } from '../../core/db'
 import model from '../../core/model'
@@ -68,7 +68,7 @@ async function addBuildPackageToRegistry({ auth, args, services }: Props<Args, S
       readme: mod.root.readme,
       manifest,
       inputs: mod.root.inputs.map(input => {
-        const manifestProps = manifest.inputs[input.name]
+        const manifestProps = manifest.inputs?.[input.name]
         return {
           name: input.name,
           type: input.type,

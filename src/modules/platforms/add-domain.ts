@@ -1,4 +1,4 @@
-import _ from 'radash'
+import * as _ from 'radash'
 import * as t from '../../core/types'
 import mappers from '../../core/view/mappers'
 import makeMongo, { MongoClient } from '../../core/db'
@@ -15,6 +15,7 @@ interface Args {
   workspaceId: t.Id<'workspace'>
   platformId: t.Id<'platform'>
   domain: string
+  createZone: boolean
   provider: t.CloudProvider
 }
 
@@ -50,11 +51,11 @@ async function addDomain({ auth, args, services }: Props<Args, Services, t.Platf
       key: 'exo.err.platforms.add-domain.mellowa'
     })
   }
-
+  
   const pack = await mongo.findBuildPackage({
     provider: args.provider,
     name: 'exo-domain',
-    owner: 'exobase',
+    owner: 'exobase-inc',
     type: 'domain'
   })
   if (!pack) {
@@ -120,7 +121,8 @@ async function addDomain({ auth, args, services }: Props<Args, Services, t.Platf
     }) as t.BuildPackageRef,
     attributes: {},
     config: {
-      domain: args.domain
+      domain: args.domain,
+      create_hosted_zone: args.createZone
     },
     ledger: [
       {
@@ -188,10 +190,10 @@ async function addDomain({ auth, args, services }: Props<Args, Services, t.Platf
   await builder.trigger.build(
     {
       args: {
-        deploymentId: deploymentId,
+        deploymentId,
         workspaceId,
         platformId: platform.id,
-        unitId,
+        unitId: unit.id,
         logId
       }
     },
@@ -215,6 +217,7 @@ export default _.compose(
     workspaceId: yup.string().required(),
     platformId: yup.string().required(),
     domain: yup.string().required(),
+    createZone: yup.boolean().required(),
     provider: yup.string().oneOf(['aws', 'gcp']).required()
   })),
   useService<Services>({

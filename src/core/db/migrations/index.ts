@@ -1,4 +1,4 @@
-import _ from 'radash'
+import * as _ from 'radash'
 import { Collection } from '../collections'
 import { MongoDocument } from '../types'
 import { Migration } from './types'
@@ -56,7 +56,7 @@ const ensureMigrated = async <T extends MongoDocument>(
 
   // Rejoin migrated documents with documents
   // that didn't need to be migrated
-  return _.zip(documents, migrated, (x) => x._id)
+  return _.merge(documents, migrated, (x) => x._id)
 }
 
 export default {

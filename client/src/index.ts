@@ -138,12 +138,24 @@ const createApi = (url: string) => {
         workspaceId: string
         platformId: string
         domain: string
+        createZone: boolean
         provider: t.CloudProvider
       }, {
         domain: t.Domain
       }>({
         module: 'platforms',
         function: 'add-domain'
+      }),
+      removeDomain: endpoint<{
+        workspaceId: string
+        platformId: string
+        domainId: string
+        provider: t.CloudProvider
+      }, {
+        domain: t.Domain
+      }>({
+        module: 'platforms',
+        function: 'remove-domain'
       }),
       find: endpoint<{
         workspaceId: string
